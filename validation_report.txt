@@ -1,8 +1,0 @@
-Validation performed in the packaging environment:
-- python -m wsd.lab_setup --project-root . --port 8039
-- pytest -q
-- local smoke test for python -m wsd.lab_traffic against website_lab served via python -m http.server
-
-See lab/generated/ for generated nginx.conf and website_link_check.json.
-............                                                             [100%]
-12 passed in 11.96s
