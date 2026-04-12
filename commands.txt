@@ -1,0 +1,14 @@
+pip install -r requirements.txt
+pip install -e .
+python -m wsd.train --generate-synthetic --output-dir data/synthetic_run
+python -m wsd.train --data-dir data/synthetic_run --prefixes 3 5 10 15 20
+
+
+pip install -r requirements.txt
+pip install -e .
+
+python -m wsd.prepare_dataset --input-path data/nginx_demo_raw/access.log --format nginx_combined --manual-labels data/nginx_demo_raw/manual_labels.csv --output-dir data/nginx_demo_prepared
+
+python -m wsd.train --data-dir data/nginx_demo_prepared --prefixes 3 5 10 15 20
+
+python -m wsd.serve --bundle data/nginx_demo_prepared/models/logistic_regression_bundle.pkl --graph-dir data/nginx_demo_prepared
