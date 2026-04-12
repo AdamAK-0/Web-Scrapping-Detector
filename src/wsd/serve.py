@@ -64,7 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bundle", default=os.getenv("WSD_MODEL_BUNDLE"), required=os.getenv("WSD_MODEL_BUNDLE") is None, help="Path to a saved .pkl model bundle")
     parser.add_argument("--graph-dir", default=os.getenv("WSD_GRAPH_DIR"), required=os.getenv("WSD_GRAPH_DIR") is None, help="Directory containing graph_edges.csv and graph_categories.csv")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=8039)
     return parser.parse_args()
 
 

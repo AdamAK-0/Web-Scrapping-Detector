@@ -11,6 +11,9 @@ Requires-Dist: networkx>=3.2
 Requires-Dist: scikit-learn>=1.4
 Requires-Dist: fastapi>=0.111
 Requires-Dist: uvicorn>=0.30
+Requires-Dist: matplotlib>=3.8
+Requires-Dist: requests>=2.32
+Requires-Dist: beautifulsoup4>=4.12
 Provides-Extra: dev
 Requires-Dist: pytest>=8.0; extra == "dev"
 
@@ -146,7 +149,7 @@ python -m wsd.serve \
 Example request:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/score \
+curl -X POST http://127.0.0.1:8039/score \
   -H "Content-Type: application/json" \
   -d '{
     "session_id": "live_session_1",
@@ -212,3 +215,58 @@ This version supports a strong **research starter pipeline**:
 - drift-aware thresholding for deployment
 - evaluation on a real production website dataset
 - ablation studies for entropy vs graph vs timing features
+
+
+## 5) Research experiments and ablations
+
+Run calibrated ablation experiments with confidence intervals and report artifacts:
+
+```bash
+PYTHONPATH=src python -m wsd.experiment   --data-dir data/nginx_demo_prepared   --prefixes 3 5 10 15 20   --n-bootstrap 300   --save-models
+```
+
+This exports:
+
+- ablation-specific metrics CSVs
+- prediction tables
+- bootstrap confidence intervals
+- detection-delay summaries
+- a leaderboard
+- a markdown summary
+- plots for F1-by-prefix and the final leaderboard
+
+
+## 6) Local Nginx website lab (Windows)
+
+A complete Windows-ready local lab is included for the project website in `website_lab/`.
+
+One-time setup:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\lab\scripts\setup_nginx_windows.ps1
+```
+
+Start the site through Nginx:
+
+```bat
+lab\scripts\start_nginx_windows.bat
+```
+
+Generate local labeled traffic:
+
+```bat
+lab\scripts\generate_human_traffic.bat
+lab\scripts\generate_bot_bfs_traffic.bat
+lab\scripts\generate_bot_dfs_traffic.bat
+lab\scripts\generate_bot_linear_traffic.bat
+```
+
+Prepare and run the research pipeline on the collected logs:
+
+```bat
+lab\scripts\prepare_live_dataset.bat
+lab\scripts\run_research_pipeline.bat
+```
+
+Detailed instructions are in `LAB_SETUP.md`.

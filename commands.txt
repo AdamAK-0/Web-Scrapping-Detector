@@ -12,3 +12,44 @@ python -m wsd.prepare_dataset --input-path data/nginx_demo_raw/access.log --form
 python -m wsd.train --data-dir data/nginx_demo_prepared --prefixes 3 5 10 15 20
 
 python -m wsd.serve --bundle data/nginx_demo_prepared/models/logistic_regression_bundle.pkl --graph-dir data/nginx_demo_prepared
+
+
+
+pip install -r requirements.txt
+pip install -e .
+
+python -m wsd.prepare_dataset --input-path path/to/access.log --format nginx_combined --manual-labels path/to/manual_labels.csv --output-dir data/prepared_run
+
+python -m wsd.train --data-dir data/prepared_run --prefixes 3 5 10 15 20
+
+PYTHONPATH=src python -m wsd.experiment --data-dir data/prepared_run --prefixes 3 5 10 15 20 --n-bootstrap 300 --save-models
+
+cd NetworkSecurityProject\web_scraping_detector_project\website_lab
+python -m http.server 8039
+
+PowerShell -ExecutionPolicy Bypass -File lab\scripts\setup_nginx_windows.ps1
+lab\scripts\start_nginx_windows.bat
+lab\scripts\generate_human_traffic.bat
+lab\scripts\generate_bot_bfs_traffic.bat
+lab\scripts\generate_bot_dfs_traffic.bat
+lab\scripts\generate_bot_linear_traffic.bat
+lab\scripts\prepare_live_dataset.bat
+lab\scripts\run_research_pipeline.bat
+
+
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -e .
+
+Set-ExecutionPolicy -Scope Process Bypass
+.\lab\scripts\setup_nginx_windows.ps1
+
+lab\scripts\reset_live_logs.bat
+lab\scripts\start_nginx_windows.bat
+
+lab\scripts\stop_nginx_windows.bat
+
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\stop_nginx_windows.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\start_nginx_windows.ps1
+

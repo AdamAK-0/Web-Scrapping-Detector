@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ | AquaShield Research Lab</title>
+  <meta name="description" content="A polished multi-page website built for both grading and scraping-detection experiments." />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <script defer src="/assets/js/main.js"></script>
+</head>
+<body>
+  
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="/index.html">
+      <span class="brand-mark">A</span>
+      <span>
+        <strong>AquaShield Research Lab</strong>
+        <small>Smart Water Systems & Research Showcase</small>
+      </span>
+    </a>
+    <nav class="desktop-nav"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link active" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+    <button class="menu-toggle" aria-label="Open navigation" onclick="toggleMenu()">☰</button>
+  </div>
+  <nav id="mobileNav" class="mobile-nav container"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link active" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+</header>
+
+  
+<main>
+  <section class="content-hero">
+    <div class="container">
+      <span class="kicker">FAQ</span>
+      <h1>Frequently asked questions</h1>
+      <p class="muted">Quick answers about deployment, grading, and how this site fits into your research workflow.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container faq-list">
+      <article class="faq-item"><button type="button">Can this website be used locally?<span>+</span></button><div class="answer">Yes. It is a static website, so you can run it locally with Python, VS Code Live Server, Apache, or Nginx.</div></article><article class="faq-item"><button type="button">Can we collect logs from it?<span>+</span></button><div class="answer">Yes. The cleanest setup is to serve it through Nginx, which will generate access logs you can feed into your scraper-detection pipeline.</div></article><article class="faq-item"><button type="button">Are the images external?<span>+</span></button><div class="answer">No. All illustrations are local SVG assets, so the website works offline and is easy to submit or demo.</div></article><article class="faq-item"><button type="button">Can we extend it later?<span>+</span></button><div class="answer">Yes. You can add hidden honeypots, instrumented JavaScript, API endpoints, or a live scoring dashboard later.</div></article><article class="faq-item"><button type="button">Why are there articles and product pages?<span>+</span></button><div class="answer">This creates more realistic human navigation and richer session graphs, which improves the research quality of your bot-detection experiments.</div></article>
+    </div>
+  </section>
+</main>
+
+  
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AquaShield Research Lab</h3>
+      <p>A demonstration website designed for security research, grading, and scraper-detection experiments.</p>
+    </div>
+    <div>
+      <h4>Explore</h4>
+      <a href="/products.html">Products</a>
+      <a href="/articles.html">Articles</a>
+      <a href="/faq.html">FAQ</a>
+    </div>
+    <div>
+      <h4>Project Links</h4>
+      <a href="/about.html">About the Lab</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/sitemap.xml">Sitemap</a>
+    </div>
+    <div>
+      <h4>Research Note</h4>
+      <p class="muted">This site intentionally includes a deep navigation structure to support behavior-based bot detection experiments.</p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 AquaShield Research Lab</span>
+    <span>Built for academic demonstration and cybersecurity research.</span>
+  </div>
+  <a class="honeypot-link" href="/hidden/diagnostic-offer.html" tabindex="-1" aria-hidden="true">Diagnostics</a>
+</footer>
+
+</body>
+</html>

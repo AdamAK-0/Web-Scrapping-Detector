@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart | AquaShield Research Lab</title>
+  <meta name="description" content="Review the demo cart and manage selected AquaShield products." />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <script defer src="/assets/js/main.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="/index.html">
+        <span class="brand-mark">A</span>
+        <span>
+          <strong>AquaShield Research Lab</strong>
+          <small>Smart Water Systems & Research Showcase</small>
+        </span>
+      </a>
+      <nav class="desktop-nav"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link" href="/articles.html">Articles</a><a class="nav-link active" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+      <button class="menu-toggle" aria-label="Open navigation" onclick="toggleMenu()">☰</button>
+    </div>
+    <nav id="mobileNav" class="mobile-nav container"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link" href="/articles.html">Articles</a><a class="nav-link active" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+  </header>
+
+  <main>
+    <section class="content-hero">
+      <div class="container breadcrumbs">
+        <a href="/index.html">Home</a><span>›</span>
+        <span>Cart</span>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <span class="kicker">Demo cart</span>
+        <h1 style="margin:.4rem 0 1rem">Your selected products</h1>
+        <p class="muted">This page lets you review the items you added, remove individual products, or clear the cart before continuing.</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="container cart-layout">
+        <div>
+          <div id="cartEmpty" class="search-empty">Your cart is currently empty. Add products from the catalog to see them here.</div>
+          <div id="cartItems" class="cart-items"></div>
+        </div>
+        <aside id="cartSummary" class="panel summary-card" hidden>
+          <h2 style="margin-top:0">Cart summary</h2>
+          <div class="summary-row"><span>Items</span><strong data-cart-count>0</strong></div>
+          <div class="summary-row"><span>Total</span><strong id="cartTotal">$0</strong></div>
+          <div class="hero-actions" style="margin-top:1rem">
+            <a class="btn btn-primary" href="/products.html">Continue shopping</a>
+            <button class="btn btn-secondary" type="button" onclick="clearCart()">Clear cart</button>
+          </div>
+          <p class="cart-note" style="margin-top:1rem">Demo note: this cart is stored locally in your browser using localStorage for the project website.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h3>AquaShield Research Lab</h3>
+        <p>A demonstration website designed for security research, grading, and scraper-detection experiments.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="/products.html">Products</a>
+        <a href="/articles.html">Articles</a>
+        <a href="/faq.html">FAQ</a>
+      </div>
+      <div>
+        <h4>Project Links</h4>
+        <a href="/about.html">About the Lab</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/sitemap.xml">Sitemap</a>
+      </div>
+      <div>
+        <h4>Research Note</h4>
+        <p class="muted">This site intentionally includes a deep navigation structure to support behavior-based bot detection experiments.</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© 2026 AquaShield Research Lab</span>
+      <span>Built for academic demonstration and cybersecurity research.</span>
+    </div>
+    <a class="honeypot-link" href="/hidden/diagnostic-offer.html" tabindex="-1" aria-hidden="true">Diagnostics</a>
+  </footer>
+</body>
+</html>

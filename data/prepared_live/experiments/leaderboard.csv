@@ -1,0 +1,11 @@
+model_name,ablation_name,threshold,final_prefix,accuracy,precision,recall,f1,roc_auc,pr_auc,bot_detection_rate,mean_first_detected_prefix_bot
+logistic_regression,all_features,0.05,20,1.0,1.0,1.0,1.0,,,1.0,3.0
+random_forest,all_features,0.1,20,1.0,1.0,1.0,1.0,,,1.0,3.0
+logistic_regression,graph_plus_entropy,0.05,20,1.0,1.0,1.0,1.0,,,1.0,5.0
+random_forest,graph_plus_entropy,0.05,20,1.0,1.0,1.0,1.0,,,1.0,3.6666666666666665
+logistic_regression,graph_only,0.05,20,1.0,1.0,1.0,1.0,,,1.0,3.0
+random_forest,graph_only,0.1,20,1.0,1.0,1.0,1.0,,,1.0,5.333333333333333
+logistic_regression,entropy_only,0.05,20,1.0,1.0,1.0,1.0,,,1.0,10.0
+random_forest,entropy_only,0.1,20,1.0,1.0,1.0,1.0,,,1.0,11.666666666666666
+logistic_regression,timing_only,0.05,20,1.0,1.0,1.0,1.0,,,1.0,3.0
+random_forest,timing_only,0.2,20,1.0,1.0,1.0,1.0,,,1.0,3.0

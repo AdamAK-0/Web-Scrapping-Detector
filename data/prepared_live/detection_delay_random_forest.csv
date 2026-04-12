@@ -1,0 +1,3 @@
+label,num_sessions,detection_rate,mean_first_detected_prefix
+bot,13,1.0,12.692307692307692
+human,2,0.0,

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invisible Honeypots in Modern Web Applications | AquaShield Research Lab</title>
+  <meta name="description" content="Hidden endpoints and decoy paths can provide high-confidence evidence of automation." />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <script defer src="/assets/js/main.js"></script>
+</head>
+<body>
+  
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="/index.html">
+      <span class="brand-mark">A</span>
+      <span>
+        <strong>AquaShield Research Lab</strong>
+        <small>Smart Water Systems & Research Showcase</small>
+      </span>
+    </a>
+    <nav class="desktop-nav"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link active" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+    <button class="menu-toggle" aria-label="Open navigation" onclick="toggleMenu()">☰</button>
+  </div>
+  <nav id="mobileNav" class="mobile-nav container"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link active" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+</header>
+
+  
+<main>
+  <section class="content-hero">
+    <div class="container breadcrumbs">
+      <a href="/index.html">Home</a><span>›</span>
+      <a href="/articles.html">Articles</a><span>›</span>
+      <span>Invisible Honeypots in Modern Web Applications</span>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container article-layout">
+      <div class="article-content panel">
+        <span class="kicker">Research insight</span>
+        <h1>Invisible Honeypots in Modern Web Applications</h1>
+        <p class="muted">Hidden endpoints and decoy paths can provide high-confidence evidence of automation.</p>
+        <p>Honeypots are especially attractive because they can provide near-certain evidence of automation when designed carefully.</p><p>A hidden link that is not visible or reachable to normal users but is present in the DOM may still be discovered by simplistic crawlers.</p><p>Modern honeypots do not need to be obvious.</p><p>They can appear as hidden offers, undocumented diagnostic pages, or decoy API patterns.</p><p>The challenge is balancing detection value with usability and avoiding search-engine indexing or accidental triggering by assistive tooling.</p><p>For research environments, honeypots are best used as a labeled signal rather than the only defense.</p><p>They can enrich training data and provide a useful auxiliary feature in a larger behavioral detection pipeline.</p>
+        <div class="inline-actions" style="margin-top:1rem">
+          <a class="btn btn-primary" href="/products.html">Browse catalog</a>
+          <a class="btn btn-secondary" href="/contact.html">Discuss the project</a>
+        </div>
+      </div>
+      <div class="panel">
+        <img src="/assets/images/puremesh-filter.svg" alt="Invisible Honeypots in Modern Web Applications" style="border-radius:18px;margin-bottom:1rem" />
+        <h3>Recommended product links</h3>
+        <ul class="list-clean"><li><a href="/pages/products/hydra-node-x.html">HydraNode X Sensor Kit</a></li><li><a href="/pages/products/puremesh-filter.html">PureMesh Filtration Unit</a></li><li><a href="/pages/products/river-vision-cam.html">RiverVision Inspection Cam</a></li></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+  
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AquaShield Research Lab</h3>
+      <p>A demonstration website designed for security research, grading, and scraper-detection experiments.</p>
+    </div>
+    <div>
+      <h4>Explore</h4>
+      <a href="/products.html">Products</a>
+      <a href="/articles.html">Articles</a>
+      <a href="/faq.html">FAQ</a>
+    </div>
+    <div>
+      <h4>Project Links</h4>
+      <a href="/about.html">About the Lab</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/sitemap.xml">Sitemap</a>
+    </div>
+    <div>
+      <h4>Research Note</h4>
+      <p class="muted">This site intentionally includes a deep navigation structure to support behavior-based bot detection experiments.</p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 AquaShield Research Lab</span>
+    <span>Built for academic demonstration and cybersecurity research.</span>
+  </div>
+  <a class="honeypot-link" href="/hidden/diagnostic-offer.html" tabindex="-1" aria-hidden="true">Diagnostics</a>
+</footer>
+
+</body>
+</html>
