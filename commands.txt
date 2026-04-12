@@ -12,3 +12,17 @@ python -m wsd.prepare_dataset --input-path data/nginx_demo_raw/access.log --form
 python -m wsd.train --data-dir data/nginx_demo_prepared --prefixes 3 5 10 15 20
 
 python -m wsd.serve --bundle data/nginx_demo_prepared/models/logistic_regression_bundle.pkl --graph-dir data/nginx_demo_prepared
+
+
+
+pip install -r requirements.txt
+pip install -e .
+
+python -m wsd.prepare_dataset --input-path path/to/access.log --format nginx_combined --manual-labels path/to/manual_labels.csv --output-dir data/prepared_run
+
+python -m wsd.train --data-dir data/prepared_run --prefixes 3 5 10 15 20
+
+PYTHONPATH=src python -m wsd.experiment --data-dir data/prepared_run --prefixes 3 5 10 15 20 --n-bootstrap 300 --save-models
+
+cd NetworkSecurityProject\web_scraping_detector_project\website_lab
+python -m http.server 8000

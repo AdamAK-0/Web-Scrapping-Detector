@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>http://localhost:8000/index.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/products.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/articles.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/about.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/faq.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/contact.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/search.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/products/aqua-sense-pro.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/products/flow-guard-mini.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/products/hydra-node-x.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/products/puremesh-filter.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/products/river-vision-cam.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/products/eco-reservoir-kit.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/articles/designing-websites-for-behavioral-security-research.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/articles/early-bot-detection-why-navigation-patterns-matter.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/pages/articles/honeypots-in-modern-web-applications.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/hidden/diagnostic-offer.html</loc><lastmod>2026-04-12</lastmod></url>
+  <url><loc>http://localhost:8000/cart.html</loc></url>
+</urlset>

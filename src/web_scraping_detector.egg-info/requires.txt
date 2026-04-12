@@ -4,6 +4,7 @@ networkx>=3.2
 scikit-learn>=1.4
 fastapi>=0.111
 uvicorn>=0.30
+matplotlib>=3.8
 
 [dev]
 pytest>=8.0

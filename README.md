@@ -196,3 +196,22 @@ This version supports a strong **research starter pipeline**:
 - drift-aware thresholding for deployment
 - evaluation on a real production website dataset
 - ablation studies for entropy vs graph vs timing features
+
+
+## 5) Research experiments and ablations
+
+Run calibrated ablation experiments with confidence intervals and report artifacts:
+
+```bash
+PYTHONPATH=src python -m wsd.experiment   --data-dir data/nginx_demo_prepared   --prefixes 3 5 10 15 20   --n-bootstrap 300   --save-models
+```
+
+This exports:
+
+- ablation-specific metrics CSVs
+- prediction tables
+- bootstrap confidence intervals
+- detection-delay summaries
+- a leaderboard
+- a markdown summary
+- plots for F1-by-prefix and the final leaderboard

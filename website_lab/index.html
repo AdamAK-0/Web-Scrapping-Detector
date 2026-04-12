@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home | AquaShield Research Lab</title>
+  <meta name="description" content="A polished multi-page website built for both grading and scraping-detection experiments." />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <script defer src="/assets/js/main.js"></script>
+</head>
+<body>
+  
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="/index.html">
+      <span class="brand-mark">A</span>
+      <span>
+        <strong>AquaShield Research Lab</strong>
+        <small>Smart Water Systems & Research Showcase</small>
+      </span>
+    </a>
+    <nav class="desktop-nav"><a class="nav-link active" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+    <button class="menu-toggle" aria-label="Open navigation" onclick="toggleMenu()">☰</button>
+  </div>
+  <nav id="mobileNav" class="mobile-nav container"><a class="nav-link active" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+</header>
+
+  
+<main>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="kicker">Beautiful academic demo website</span>
+        <h1>Build your scraper-detection project on a site that actually feels real.</h1>
+        <p>A polished multi-page website built for both grading and scraping-detection experiments. It includes a polished landing page, searchable catalog, product detail pages, article pages, FAQ, and contact flow — all connected through a rich internal link structure for behavioral analysis.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/products.html">Explore products</a>
+          <a class="btn btn-secondary" href="/articles.html">Read articles</a>
+        </div>
+        <form id="heroSearchForm" class="filter-bar" style="padding-top:1.3rem">
+          <div class="field"><input type="text" placeholder="Search monitors, sensors, filters..." aria-label="Search products" /></div>
+          <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+        <div class="inline-badges">
+          <span>Responsive UI</span>
+          <span>Multi-page structure</span>
+          <span>Local images</span>
+          <span>Research-friendly navigation</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <img src="/assets/images/hero-dashboard.svg" alt="Dashboard style hero illustration" />
+      </div>
+    </div>
+    <div class="container stat-strip">
+      <div class="metric-card"><strong>6</strong><span>Product detail pages</span></div>
+      <div class="metric-card"><strong>3</strong><span>Research article pages</span></div>
+      <div class="metric-card"><strong>100%</strong><span>Offline-ready assets</span></div>
+      <div class="metric-card"><strong><span data-cart-count>0</span></strong><span>Items in demo cart</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Why this site is useful for your project</h2>
+          <p>It is visually strong enough for grading, while also providing the page variety needed for traversal-graph experiments.</p>
+        </div>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card"><div class="feature-icon">01</div><h3>Rich navigation graph</h3><p>Home, catalog, detail pages, articles, FAQ, and contact pages create realistic path diversity.</p></article>
+        <article class="feature-card"><div class="feature-icon">02</div><h3>Searchable content</h3><p>Search and filtering generate more human-like branching behavior for session analysis.</p></article>
+        <article class="feature-card"><div class="feature-icon">03</div><h3>Beautiful visuals</h3><p>Custom SVG illustrations keep the site polished without relying on external image links.</p></article>
+        <article class="feature-card"><div class="feature-icon">04</div><h3>Research hooks</h3><p>The structure can later support access logs, honeypots, and real-time scoring middleware.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Featured products</h2>
+          <p>These product pages help create repeated templates and category transitions — exactly the sort of structure that is useful for scraper detection experiments.</p>
+        </div>
+        <a class="btn btn-ghost" href="/products.html">View all products</a>
+      </div>
+      <div class="products-grid">
+        
+    <article class="product-card">
+      <img src="/assets/images/aqua-sense-pro.svg" alt="AquaSense Pro Monitor" />
+      <div class="product-card-body">
+        <span class="badge">Best Seller</span>
+        <h3>AquaSense Pro Monitor</h3>
+        <p>AI-assisted water quality monitor with anomaly alerts and live dashboard views.</p>
+        <div class="meta-row">
+          <span>Monitoring</span>
+          <strong>$249</strong>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="/pages/products/aqua-sense-pro.html">View details</a>
+          <button class="btn btn-secondary" onclick="addToCart('AquaSense Pro Monitor', '$249')">Add to cart</button>
+        </div>
+      </div>
+    </article>
+    
+    <article class="product-card">
+      <img src="/assets/images/flow-guard-mini.svg" alt="FlowGuard Mini Controller" />
+      <div class="product-card-body">
+        <span class="badge">Lab Favorite</span>
+        <h3>FlowGuard Mini Controller</h3>
+        <p>Compact irrigation controller for research plots and smart greenhouse pilots.</p>
+        <div class="meta-row">
+          <span>Control</span>
+          <strong>$179</strong>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="/pages/products/flow-guard-mini.html">View details</a>
+          <button class="btn btn-secondary" onclick="addToCart('FlowGuard Mini Controller', '$179')">Add to cart</button>
+        </div>
+      </div>
+    </article>
+    
+    <article class="product-card">
+      <img src="/assets/images/hydra-node-x.svg" alt="HydraNode X Sensor Kit" />
+      <div class="product-card-body">
+        <span class="badge">Field Ready</span>
+        <h3>HydraNode X Sensor Kit</h3>
+        <p>Modular edge sensor node for pH, conductivity, turbidity, and flow.</p>
+        <div class="meta-row">
+          <span>Sensors</span>
+          <strong>$319</strong>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="/pages/products/hydra-node-x.html">View details</a>
+          <button class="btn btn-secondary" onclick="addToCart('HydraNode X Sensor Kit', '$319')">Add to cart</button>
+        </div>
+      </div>
+    </article>
+    
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container about-layout">
+      <div class="panel">
+        <span class="kicker">Research-ready design</span>
+        <h2>Built for both presentation quality and experiment quality</h2>
+        <p class="muted">You can present this as a complete academic demonstration website, then deploy it locally or behind Nginx to collect access logs for your scraper-detection pipeline.</p>
+        <ul class="list-clean">
+          <li>Clean internal linking across categories and articles</li>
+          <li>Product cards and detail pages for structured navigation</li>
+          <li>Search and filter components for realistic user behavior</li>
+          <li>Contact and FAQ pages for non-product browsing branches</li>
+        </ul>
+        <div class="inline-actions" style="margin-top:1rem">
+          <a class="btn btn-primary" href="/about.html">Learn about the lab</a>
+          <a class="btn btn-secondary" href="/faq.html">Open FAQ</a>
+        </div>
+      </div>
+      <div class="about-hero-img">
+        <img src="/assets/images/about-lab.svg" alt="Research lab showcase illustration" />
+      </div>
+    </div>
+  </section>
+</main>
+
+  
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AquaShield Research Lab</h3>
+      <p>A demonstration website designed for security research, grading, and scraper-detection experiments.</p>
+    </div>
+    <div>
+      <h4>Explore</h4>
+      <a href="/products.html">Products</a>
+      <a href="/articles.html">Articles</a>
+      <a href="/faq.html">FAQ</a>
+    </div>
+    <div>
+      <h4>Project Links</h4>
+      <a href="/about.html">About the Lab</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/sitemap.xml">Sitemap</a>
+    </div>
+    <div>
+      <h4>Research Note</h4>
+      <p class="muted">This site intentionally includes a deep navigation structure to support behavior-based bot detection experiments.</p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 AquaShield Research Lab</span>
+    <span>Built for academic demonstration and cybersecurity research.</span>
+  </div>
+  <a class="honeypot-link" href="/hidden/diagnostic-offer.html" tabindex="-1" aria-hidden="true">Diagnostics</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Designing Websites for Behavioral Security Research | AquaShield Research Lab</title>
+  <meta name="description" content="How structured navigation, categories, and controlled page depth can support scraper-detection experiments." />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <script defer src="/assets/js/main.js"></script>
+</head>
+<body>
+  
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="/index.html">
+      <span class="brand-mark">A</span>
+      <span>
+        <strong>AquaShield Research Lab</strong>
+        <small>Smart Water Systems & Research Showcase</small>
+      </span>
+    </a>
+    <nav class="desktop-nav"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link active" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+    <button class="menu-toggle" aria-label="Open navigation" onclick="toggleMenu()">☰</button>
+  </div>
+  <nav id="mobileNav" class="mobile-nav container"><a class="nav-link" href="/index.html">Home</a><a class="nav-link" href="/products.html">Products</a><a class="nav-link active" href="/articles.html">Articles</a><a class="nav-link" href="/cart.html">Cart</a><a class="nav-link" href="/about.html">About</a><a class="nav-link" href="/faq.html">FAQ</a><a class="nav-link" href="/contact.html">Contact</a></nav>
+</header>
+
+  
+<main>
+  <section class="content-hero">
+    <div class="container breadcrumbs">
+      <a href="/index.html">Home</a><span>›</span>
+      <a href="/articles.html">Articles</a><span>›</span>
+      <span>Designing Websites for Behavioral Security Research</span>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container article-layout">
+      <div class="article-content panel">
+        <span class="kicker">Research insight</span>
+        <h1>Designing Websites for Behavioral Security Research</h1>
+        <p class="muted">How structured navigation, categories, and controlled page depth can support scraper-detection experiments.</p>
+        <p>Behavior-based bot detection benefits from websites that contain diverse but realistic navigation flows.</p><p>A useful research site should include hubs, leaf pages, category pages, content pages, and functional endpoints such as search or contact forms.</p><p>This variety creates richer traversal graphs and makes human navigation measurably different from scripted scraping.</p><p>When designing a site for security research, it is also important to keep the content believable.</p><p>Participants browse more naturally when the interface feels polished and the categories make sense.</p><p>A clean e-commerce or product showcase website is often a strong choice because it contains repeated templates, product detail pages, and category transitions.</p><p>Finally, a research website should support logging at the HTTP layer.</p><p>Access logs, referrers, paths, timestamps, and user-agent strings become essential when building real-world detection pipelines.</p>
+        <div class="inline-actions" style="margin-top:1rem">
+          <a class="btn btn-primary" href="/products.html">Browse catalog</a>
+          <a class="btn btn-secondary" href="/contact.html">Discuss the project</a>
+        </div>
+      </div>
+      <div class="panel">
+        <img src="/assets/images/blog-research.svg" alt="Designing Websites for Behavioral Security Research" style="border-radius:18px;margin-bottom:1rem" />
+        <h3>Recommended product links</h3>
+        <ul class="list-clean"><li><a href="/pages/products/aqua-sense-pro.html">AquaSense Pro Monitor</a></li><li><a href="/pages/products/flow-guard-mini.html">FlowGuard Mini Controller</a></li><li><a href="/pages/products/hydra-node-x.html">HydraNode X Sensor Kit</a></li></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+  
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AquaShield Research Lab</h3>
+      <p>A demonstration website designed for security research, grading, and scraper-detection experiments.</p>
+    </div>
+    <div>
+      <h4>Explore</h4>
+      <a href="/products.html">Products</a>
+      <a href="/articles.html">Articles</a>
+      <a href="/faq.html">FAQ</a>
+    </div>
+    <div>
+      <h4>Project Links</h4>
+      <a href="/about.html">About the Lab</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/sitemap.xml">Sitemap</a>
+    </div>
+    <div>
+      <h4>Research Note</h4>
+      <p class="muted">This site intentionally includes a deep navigation structure to support behavior-based bot detection experiments.</p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 AquaShield Research Lab</span>
+    <span>Built for academic demonstration and cybersecurity research.</span>
+  </div>
+  <a class="honeypot-link" href="/hidden/diagnostic-offer.html" tabindex="-1" aria-hidden="true">Diagnostics</a>
+</footer>
+
+</body>
+</html>

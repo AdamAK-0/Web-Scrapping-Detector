@@ -8,6 +8,8 @@ src/web_scraping_detector.egg-info/top_level.txt
 src/wsd/__init__.py
 src/wsd/config.py
 src/wsd/entropy.py
+src/wsd/evaluation.py
+src/wsd/experiment.py
 src/wsd/features.py
 src/wsd/graph_builder.py
 src/wsd/labeling.py
@@ -21,6 +23,8 @@ src/wsd/synthetic_data.py
 src/wsd/train.py
 src/wsd/types.py
 tests/test_entropy.py
+tests/test_evaluation.py
+tests/test_experiment.py
 tests/test_features.py
 tests/test_log_pipeline.py
 tests/test_online.py
