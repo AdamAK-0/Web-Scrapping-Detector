@@ -1,5 +1,9 @@
 cd c:\Users\Adam\NetworkSecurityProject\web_scraping_detector_project
 
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline -LogPath
+
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -30,6 +34,10 @@ lab\scripts\generate_bot_playwright_traffic.bat
 lab\scripts\generate_bot_selenium_traffic.bat
 
 lab\scripts\prepare_live_dataset.bat
+
+python -m wsd.export_label_template --session-summary data\prepared_live\session_summary.csv --output-path data\prepared_live\annotation_template.csv
+
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\run_research_pipeline.ps1 -LogPath run_logs.txt
 
 python -m wsd.experiment `
   --data-dir data\prepared_live `

@@ -8,6 +8,7 @@ tmp*/
 
 # Packaging/build artifacts
 *.egg-info/
+catboost_info/
 
 # Local lab-generated files
 lab/generated/
@@ -30,7 +31,9 @@ data/**/session_metadata.csv
 data/**/split_summary*.csv
 data/**/leakage_audit.csv
 data/**/shortcut_audit.csv
+data/**/shortcut_red_flags.csv
 data/**/entropy_variant_comparison.csv
+data/**/annotation_template*.csv
 data/**/leaderboard.csv
 data/**/summary.md
 data/**/metrics_*.csv

@@ -106,6 +106,16 @@ This produces `data\prepared_live\` with:
 - `graph_edges.csv`
 - `graph_categories.csv`
 
+If you want to manually curate sessions after preparation, export an annotation sheet:
+
+```powershell
+python -m wsd.export_label_template `
+  --session-summary data\prepared_live\session_summary.csv `
+  --output-path data\prepared_live\annotation_template.csv
+```
+
+That sheet is keyed by `session_id`, which makes it easier to add real human metadata such as `participant_id`, `collection_method`, and notes before rerunning preparation/experiments.
+
 ## Run the thesis experiment pipeline
 
 ```bat
@@ -129,4 +139,5 @@ That now runs:
 - `data\prepared_live\experiments\leaderboard.csv`
 - `data\prepared_live\experiments\leakage_audit.csv`
 - `data\prepared_live\experiments\shortcut_audit.csv`
+- `data\prepared_live\experiments\shortcut_red_flags.csv`
 - `data\prepared_live\experiments\entropy_variant_comparison.csv`
