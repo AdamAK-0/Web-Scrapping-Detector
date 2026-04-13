@@ -36,6 +36,9 @@ DEFAULT_PAGE_LIKE_EXTENSIONS_TO_EXCLUDE = {
 
 DEFAULT_BOT_USER_AGENT_PATTERNS = [
     r"python-requests",
+    r"researchscraper",
+    r"researchstealth",
+    r"stealth-browser",
     r"scrapy",
     r"selenium",
     r"webdriver",
@@ -43,6 +46,7 @@ DEFAULT_BOT_USER_AGENT_PATTERNS = [
     r"puppeteer",
     r"aiohttp",
     r"httpclient",
+    r"httpx",
     r"curl/",
     r"wget/",
     r"urllib",

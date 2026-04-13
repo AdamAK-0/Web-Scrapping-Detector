@@ -242,6 +242,10 @@ lab\scripts\generate_human_traffic.bat
 lab\scripts\generate_bot_bfs_traffic.bat
 lab\scripts\generate_bot_dfs_traffic.bat
 lab\scripts\generate_bot_linear_traffic.bat
+lab\scripts\generate_bot_stealth_traffic.bat
+lab\scripts\generate_bot_products_traffic.bat
+lab\scripts\generate_bot_articles_traffic.bat
+lab\scripts\generate_bot_revisit_traffic.bat
 ```
 
 Prepare and run the research pipeline on the collected logs:

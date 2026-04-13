@@ -21,6 +21,13 @@ BOT_UAS = {
     "bfs": "ResearchScraper-BFS/1.0 (+https://localhost/lab)",
     "dfs": "ResearchScraper-DFS/1.0 (+https://localhost/lab)",
     "linear": "ResearchScraper-Linear/1.0 (+https://localhost/lab)",
+    "stealth": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 ResearchStealth/1.0"
+    ),
+    "products": "ResearchScraper-ProductFocus/1.0 (+https://localhost/lab)",
+    "articles": "ResearchScraper-ArticleFocus/1.0 (+https://localhost/lab)",
+    "revisit": "ResearchScraper-Revisit/1.0 (+https://localhost/lab)",
 }
 
 
@@ -123,6 +130,15 @@ def generate_human_sessions(base_url: str, sessions_count: int, *, real_sleep: b
             if not options:
                 current = urljoin(base_url, "products.html")
                 continue
+            if random.random() < 0.12:
+                current = random.choice(
+                    [
+                        urljoin(base_url, "search.html"),
+                        urljoin(base_url, "cart.html"),
+                        urljoin(base_url, "contact.html"),
+                    ]
+                )
+                continue
             if len(history) >= 3 and random.random() < 0.25:
                 current = history[-2]
                 continue
@@ -173,13 +189,42 @@ def generate_bot_sessions(base_url: str, sessions_count: int, *, mode: str, real
             crawl = list(reversed(crawl))
         elif mode == "linear":
             crawl = [link for link in crawl if ("/pages/products/" in link or "/pages/articles/" in link or link.endswith(("products.html", "articles.html")))]
+        elif mode == "products":
+            crawl = [
+                link
+                for link in crawl
+                if "/pages/products/" in link or link.endswith(("products.html", "cart.html"))
+            ]
+        elif mode == "articles":
+            crawl = [
+                link
+                for link in crawl
+                if "/pages/articles/" in link or link.endswith(("articles.html", "about.html"))
+            ]
+        elif mode == "revisit":
+            crawl = [
+                link
+                for link in crawl
+                if "/pages/products/" in link or "/pages/articles/" in link or link.endswith(("products.html", "articles.html", "faq.html"))
+            ]
         limit = min(len(crawl), random.randint(10, 20))
-        for link in crawl[:limit]:
+        selected = crawl[:limit]
+        if mode == "stealth":
+            random.shuffle(selected)
+        for link in selected:
             try:
                 fetch_page(session, link, fetch_assets=False)
             except requests.RequestException:
                 continue
-            sleep_jitter(real_sleep, 0.02, 0.20)
+            if mode == "stealth":
+                sleep_jitter(real_sleep, 0.35, 1.60)
+            else:
+                sleep_jitter(real_sleep, 0.02, 0.20)
+            if mode == "revisit" and random.random() < 0.30:
+                try:
+                    fetch_page(session, link, fetch_assets=False)
+                except requests.RequestException:
+                    continue
         if random.random() < 0.7:
             try:
                 session.get(urljoin(base_url, "hidden/diagnostic-offer.html"), timeout=10)
@@ -191,7 +236,12 @@ def generate_bot_sessions(base_url: str, sessions_count: int, *, mode: str, real
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate labeled local traffic for the included Nginx lab website")
     parser.add_argument("--base-url", default="http://127.0.0.1:8039/", help="Base URL of the locally served website")
-    parser.add_argument("--mode", choices=["human", "bfs", "dfs", "linear"], required=True, help="Traffic generation mode")
+    parser.add_argument(
+        "--mode",
+        choices=["human", "bfs", "dfs", "linear", "stealth", "products", "articles", "revisit"],
+        required=True,
+        help="Traffic generation mode",
+    )
     parser.add_argument("--sessions", type=int, default=12, help="Number of sessions to generate")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--real-sleep", action="store_true", help="Sleep between requests to create more realistic timestamps")

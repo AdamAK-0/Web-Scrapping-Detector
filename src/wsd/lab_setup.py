@@ -179,9 +179,13 @@ def main() -> None:
     paths = write_lab_artifacts(project_root, port=args.port, output_dir=output_dir, access_log=args.access_log, error_log=args.error_log)
 
     if args.write_conf:
-        Path(args.write_conf).write_text(Path(paths["conf_path"]).read_text(encoding="utf-8"), encoding="utf-8")
+        write_conf_path = Path(args.write_conf)
+        write_conf_path.parent.mkdir(parents=True, exist_ok=True)
+        write_conf_path.write_text(Path(paths["conf_path"]).read_text(encoding="utf-8"), encoding="utf-8")
     if args.write_report:
-        Path(args.write_report).write_text(Path(paths["report_path"]).read_text(encoding="utf-8"), encoding="utf-8")
+        write_report_path = Path(args.write_report)
+        write_report_path.parent.mkdir(parents=True, exist_ok=True)
+        write_report_path.write_text(Path(paths["report_path"]).read_text(encoding="utf-8"), encoding="utf-8")
 
     print(json.dumps(paths, indent=2))
 

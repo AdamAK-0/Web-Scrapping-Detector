@@ -18,7 +18,16 @@ data/live_logs/
 data/live_labels/
 data/prepared_live/
 data/prepared_run/
-data/synthetic_run/
+data/synthetic*/
+
+# Generated datasets and experiment artifacts
+data/**/experiments/
+data/**/models/
+data/**/prefix_features.csv
+data/**/full_session_features.csv
+data/**/metrics_*.csv
+data/**/detection_delay_*.csv
+data/**/normalized_requests.csv
 
 # Downloaded local tooling
 tools/
