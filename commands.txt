@@ -2,7 +2,9 @@ cd c:\Users\Adam\NetworkSecurityProject\web_scraping_detector_project
 
 powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic
-powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline -LogPath
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\run_research_pipeline.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline -LogPath run_logs.txt
+
 
 python -m venv .venv
 .venv\Scripts\Activate.ps1
