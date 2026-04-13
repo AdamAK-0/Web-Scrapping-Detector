@@ -298,6 +298,8 @@ def run_experiments(
     leakage_frames: list[pd.DataFrame] = []
     shortcut_audit = _build_shortcut_audit(session_metadata, full_session_df=full_session_df)
     shortcut_audit.to_csv(output_dir / "shortcut_audit.csv", index=False)
+    shortcut_red_flags = _build_shortcut_red_flags(session_metadata, full_session_df=full_session_df, positive_label=positive_label)
+    shortcut_red_flags.to_csv(output_dir / "shortcut_red_flags.csv", index=False)
     entropy_comparison = _build_entropy_variant_comparison(
         labeled_df,
         hard_prefixes=hard_prefixes or prefixes[:3],
@@ -1350,6 +1352,87 @@ def _build_shortcut_audit(session_metadata: pd.DataFrame, *, full_session_df: pd
     return pd.DataFrame(rows)
 
 
+def _build_shortcut_red_flags(
+    session_metadata: pd.DataFrame,
+    *,
+    full_session_df: pd.DataFrame,
+    positive_label: str,
+) -> pd.DataFrame:
+    rows: list[dict[str, object]] = []
+    if session_metadata.empty:
+        return pd.DataFrame(rows)
+    enriched = session_metadata.copy()
+    if not full_session_df.empty:
+        merge_columns = ["session_id"]
+        merge_columns.extend(
+            [column for column in ("navigation_entropy_score", "navigation_entropy_score_v2") if column in full_session_df.columns]
+        )
+        enriched = enriched.merge(full_session_df[merge_columns], on="session_id", how="left")
+
+    y_true = (enriched["label"] == positive_label).astype(int).to_numpy()
+    numeric_candidates = [
+        "has_suspect_user_agent",
+        "ua_browser_like",
+        "referrer_present_ratio",
+        "asset_request_ratio",
+        "num_asset_requests",
+        "num_page_requests",
+        "num_events",
+        "unique_paths",
+        "mean_delta_t",
+        "first_path_depth",
+    ]
+    for column in numeric_candidates:
+        if column not in enriched.columns:
+            continue
+        values = pd.to_numeric(enriched[column], errors="coerce").fillna(0.0).to_numpy()
+        if len(np.unique(values)) < 2 or len(np.unique(y_true)) < 2:
+            continue
+        auc = _safe_shortcut_auc(y_true, values)
+        human_values = values[y_true == 0]
+        bot_values = values[y_true == 1]
+        rows.append(
+            {
+                "cue_type": "numeric",
+                "cue_name": column,
+                "support": int(len(values)),
+                "signal_strength": float(auc),
+                "human_mean": float(np.mean(human_values)) if len(human_values) else float("nan"),
+                "bot_mean": float(np.mean(bot_values)) if len(bot_values) else float("nan"),
+                "flag_level": _shortcut_flag_level(auc),
+                "details": "single-feature separability",
+            }
+        )
+
+    categorical_candidates = ["ua_family", "first_path", "first_category", "collection_method", "automation_stack", "traffic_family"]
+    for column in categorical_candidates:
+        if column not in enriched.columns:
+            continue
+        grouped = enriched.groupby(column, dropna=False)
+        for value, group in grouped:
+            support = int(len(group))
+            if support < 3:
+                continue
+            bot_rate = float((group["label"] == positive_label).mean())
+            purity = max(bot_rate, 1.0 - bot_rate)
+            rows.append(
+                {
+                    "cue_type": "categorical",
+                    "cue_name": f"{column}={value}",
+                    "support": support,
+                    "signal_strength": purity,
+                    "human_mean": float("nan"),
+                    "bot_mean": float("nan"),
+                    "flag_level": _shortcut_flag_level(purity),
+                    "details": f"class_purity={purity:.3f}; bot_rate={bot_rate:.3f}",
+                }
+            )
+    result = pd.DataFrame(rows)
+    if not result.empty:
+        result = result.sort_values(["flag_level", "signal_strength", "support"], ascending=[True, False, False]).reset_index(drop=True)
+    return result
+
+
 def _build_entropy_variant_comparison(
     feature_df: pd.DataFrame,
     *,
@@ -1501,6 +1584,17 @@ def _write_markdown_summary(
             ]
         )
 
+    shortcut_red_flags = _read_if_exists(path.parent / "shortcut_red_flags.csv")
+    if shortcut_red_flags is not None and not shortcut_red_flags.empty:
+        lines.extend(
+            [
+                "## Shortcut red flags",
+                "",
+                _df_to_markdown(shortcut_red_flags.head(25)),
+                "",
+            ]
+        )
+
     if entropy_comparison is not None and not entropy_comparison.empty:
         lines.extend(
             [
@@ -1528,6 +1622,17 @@ def _write_markdown_summary(
                     "## Dataset warning",
                     "",
                     "Some baseline runs are still effectively perfect. Treat those results as evidence that the dataset may still be easier than the final thesis setting.",
+                    "",
+                ]
+            )
+    if shortcut_red_flags is not None and not shortcut_red_flags.empty:
+        high_flags = shortcut_red_flags[shortcut_red_flags["flag_level"] == "high"]
+        if not high_flags.empty:
+            lines.extend(
+                [
+                    "## Leakage warning",
+                    "",
+                    "Some individual shortcut cues show very strong class separability on their own. Inspect `shortcut_red_flags.csv` before making strong claims about graph or entropy novelty.",
                     "",
                 ]
             )
@@ -1754,6 +1859,28 @@ def _safe_tune_threshold(y_true: np.ndarray, y_score: np.ndarray, *, default_thr
     if len(y_true) == 0 or len(np.unique(y_true)) < 2:
         return float(default_threshold)
     return float(tune_threshold(y_true, y_score))
+
+
+def _safe_shortcut_auc(y_true: np.ndarray, values: np.ndarray) -> float:
+    try:
+        from sklearn.metrics import roc_auc_score
+
+        auc = float(roc_auc_score(y_true, values))
+    except ValueError:
+        return float("nan")
+    if np.isnan(auc):
+        return auc
+    return max(auc, 1.0 - auc)
+
+
+def _shortcut_flag_level(value: float) -> str:
+    if np.isnan(value):
+        return "low"
+    if value >= 0.95:
+        return "high"
+    if value >= 0.85:
+        return "medium"
+    return "low"
 
 
 def _can_stratify(labels: list[str]) -> bool:

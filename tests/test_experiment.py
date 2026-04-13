@@ -86,4 +86,5 @@ def test_experiment_runner_supports_harder_protocols_and_outputs(tmp_path: Path)
     assert not leaderboard.empty
     assert {"session_split", "hard_prefix_session_split", "time_split", "leave_one_human_user_out"}.issubset(set(leaderboard["protocol"]))
     assert (tmp_path / "shortcut_audit.csv").exists()
+    assert (tmp_path / "shortcut_red_flags.csv").exists()
     assert (tmp_path / "entropy_variant_comparison.csv").exists()

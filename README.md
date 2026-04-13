@@ -19,6 +19,20 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+One-command Windows startup:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1
+```
+
+Useful variants:
+
+```powershell
+.\start_project_windows.ps1 -CleanLiveData
+.\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic
+.\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline
+```
+
 Browser automation traffic support:
 
 - `playwright` mode requires `playwright install`
@@ -70,11 +84,22 @@ Key outputs:
 - `split_summary.csv`
 - `leakage_audit.csv`
 - `shortcut_audit.csv`
+- `shortcut_red_flags.csv`
 - `entropy_variant_comparison.csv`
 - `predictions_*.csv`
 - `metrics_*.csv`
 - `detection_delay_*.csv`
 - plots for F1/recall by prefix, entropy distributions, score histograms, detection speed, and example score trajectories
+
+If you want a clean sheet for manual session labeling after preparation:
+
+```powershell
+python -m wsd.export_label_template `
+  --session-summary data\prepared_run\session_summary.csv `
+  --output-path data\prepared_run\annotation_template.csv
+```
+
+That exports a session-by-session annotation CSV keyed by `session_id`, which is helpful for collecting and curating real human sessions with `participant_id` and notes.
 
 ## Manual labels format
 
@@ -103,6 +128,16 @@ Useful optional columns:
 - `notes`
 
 These values flow into session summaries and experiment metadata, enabling leave-one-human-user-out evaluation and cleaner provenance analysis.
+
+## Strong next action for thesis quality
+
+The code is now ready for the hardest missing step:
+
+1. collect 40-60 more real human sessions
+2. export an annotation template from `session_summary.csv`
+3. label those sessions with `participant_id` and `collection_method`
+4. rerun `wsd.prepare_dataset` and `wsd.experiment`
+5. inspect `shortcut_red_flags.csv` before making strong claims about entropy or graph novelty
 
 ## Supported traffic families
 
@@ -175,6 +210,12 @@ Prepare and run research:
 ```bat
 lab\scripts\prepare_live_dataset.bat
 lab\scripts\run_research_pipeline.bat
+```
+
+If you want the live training and experiment output captured to a log while it still prints in the console:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\run_research_pipeline.ps1 -LogPath run_logs.txt
 ```
 
 Detailed lab instructions are in `LAB_SETUP.md`.

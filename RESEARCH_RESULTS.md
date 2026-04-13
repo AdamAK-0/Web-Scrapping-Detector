@@ -13,6 +13,7 @@ The codebase now includes:
 - early-detection experiments on partial sessions
 - heuristic, static-feature, and full-session baselines
 - split leakage and shortcut auditing
+- explicit shortcut red-flag reporting for trivially separable cues
 - leave-one-bot-family-out evaluation
 - time-based and leave-one-human-user-out evaluation
 - richer controlled bot-generation modes for the local lab, including browser-style families
