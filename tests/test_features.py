@@ -17,5 +17,10 @@ def test_extract_features_contains_navigation_entropy_score() -> None:
     )
     features = extract_features_for_prefix(session, graph, prefix_len=4)
     assert "navigation_entropy_score" in features
+    assert "navigation_entropy_score_v2" in features
+    assert "local_branching_entropy" in features
+    assert "category_transition_entropy" in features
+    assert "entropy_slope" in features
     assert 0.0 <= features["navigation_entropy_score"] <= 1.0
+    assert 0.0 <= features["navigation_entropy_score_v2"] <= 1.0
     assert features["unique_nodes"] == 4.0

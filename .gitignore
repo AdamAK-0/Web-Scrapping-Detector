@@ -22,12 +22,23 @@ data/synthetic*/
 
 # Generated datasets and experiment artifacts
 data/**/experiments/
+data/**/experiments*/
 data/**/models/
 data/**/prefix_features.csv
 data/**/full_session_features.csv
+data/**/session_metadata.csv
+data/**/split_summary*.csv
+data/**/leakage_audit.csv
+data/**/shortcut_audit.csv
+data/**/entropy_variant_comparison.csv
+data/**/leaderboard.csv
+data/**/summary.md
 data/**/metrics_*.csv
+data/**/predictions_*.csv
+data/**/confidence_intervals_*.csv
 data/**/detection_delay_*.csv
 data/**/normalized_requests.csv
+data/**/plot_*.png
 
 # Downloaded local tooling
 tools/

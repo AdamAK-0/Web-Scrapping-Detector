@@ -168,6 +168,9 @@ def summarize_sessions(sessions: list[Session]) -> pd.DataFrame:
         unique_paths = len({e.path for e in events})
         client_key = str(events[0].extra.get("client_key", "")) if events else ""
         ip = str(events[0].extra.get("ip", "")) if events else ""
+        num_page_requests = sum(1 for event in events if is_page_like_path(event.path))
+        num_asset_requests = max(0, len(events) - num_page_requests)
+        referrer_present_ratio = sum(1 for event in events if event.referrer) / len(events) if events else 0.0
         rows.append(
             {
                 "session_id": session.session_id,
@@ -175,12 +178,25 @@ def summarize_sessions(sessions: list[Session]) -> pd.DataFrame:
                 "client_key": client_key,
                 "ip": ip,
                 "num_events": len(events),
+                "start_timestamp": min(timestamps) if timestamps else 0.0,
+                "end_timestamp": max(timestamps) if timestamps else 0.0,
                 "duration_seconds": max(timestamps) - min(timestamps) if len(timestamps) >= 2 else 0.0,
                 "unique_paths": unique_paths,
                 "unique_path_ratio": unique_paths / len(events) if events else 0.0,
                 "mean_delta_t": sum(deltas) / len(deltas) if deltas else 0.0,
                 "page_categories": len({e.page_category or infer_category_from_path(e.path) for e in events}),
+                "first_path": events[0].path if events else None,
+                "referrer_present_ratio": referrer_present_ratio,
+                "num_page_requests": num_page_requests,
+                "num_asset_requests": num_asset_requests,
+                "asset_request_ratio": num_asset_requests / len(events) if events else 0.0,
+                "has_asset_requests": float(num_asset_requests > 0),
                 "user_agent": events[0].user_agent if events else None,
+                "participant_id": str(events[0].extra.get("participant_id", "")) if events else "",
+                "traffic_family": str(events[0].extra.get("traffic_family", "")) if events else "",
+                "collection_method": str(events[0].extra.get("collection_method", "")) if events else "",
+                "automation_stack": str(events[0].extra.get("automation_stack", "")) if events else "",
+                "notes": str(events[0].extra.get("notes", "")) if events else "",
             }
         )
     return pd.DataFrame(rows)

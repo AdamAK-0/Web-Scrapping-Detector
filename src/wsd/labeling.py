@@ -11,6 +11,14 @@ from .config import DEFAULT_BOT_USER_AGENT_PATTERNS, DEFAULT_NEGATIVE_LABEL, DEF
 from .sessionizer import summarize_sessions
 from .types import Session
 
+OPTIONAL_MANUAL_METADATA_COLUMNS = [
+    "participant_id",
+    "traffic_family",
+    "collection_method",
+    "automation_stack",
+    "notes",
+]
+
 
 def apply_session_labels(
     sessions: list[Session],
@@ -27,35 +35,47 @@ def apply_session_labels(
     4. unknown
     """
     bot_user_agent_patterns = bot_user_agent_patterns or DEFAULT_BOT_USER_AGENT_PATTERNS
-    manual = load_manual_labels(manual_labels_path) if manual_labels_path else {}
+    manual_df = load_manual_labels(manual_labels_path) if manual_labels_path else pd.DataFrame()
 
     summary = summarize_sessions(sessions)
     if summary.empty:
         return summary
 
-    summary["manual_label"] = summary["client_key"].map(manual).fillna(summary["session_id"].map(manual))
+    summary = _merge_manual_metadata(summary, manual_df)
     summary["suspicious_user_agent"] = summary["user_agent"].map(lambda ua: _matches_any(ua, bot_user_agent_patterns))
     summary["weak_bot_score"] = summary.apply(_weak_bot_score, axis=1)
     summary["proposed_label"] = summary.apply(_decide_label, axis=1)
 
-    proposed_by_session = dict(zip(summary["session_id"], summary["proposed_label"], strict=False))
+    summary_lookup = summary.set_index("session_id").to_dict(orient="index")
     for session in sessions:
-        session.label = proposed_by_session.get(session.session_id, DEFAULT_UNKNOWN_LABEL)
+        row = summary_lookup.get(session.session_id, {})
+        session.label = str(row.get("proposed_label", DEFAULT_UNKNOWN_LABEL))
         for event in session.events:
             event.label = session.label
+            for column in OPTIONAL_MANUAL_METADATA_COLUMNS:
+                value = row.get(column)
+                if value is None or pd.isna(value) or not str(value).strip():
+                    continue
+                event.extra[column] = str(value).strip()
+            if row.get("traffic_family") and not event.extra.get("traffic_family"):
+                event.extra["traffic_family"] = row["traffic_family"]
     return summary
 
 
-def load_manual_labels(path: str | Path | None) -> dict[str, str]:
+def load_manual_labels(path: str | Path | None) -> pd.DataFrame:
     if path is None:
-        return {}
+        return pd.DataFrame()
     label_df = pd.read_csv(path)
     if not {"label"}.issubset(label_df.columns):
         raise ValueError("Manual labels CSV must contain a 'label' column and a 'client_key' or 'session_id' column")
-    key_column = "client_key" if "client_key" in label_df.columns else "session_id" if "session_id" in label_df.columns else None
-    if key_column is None:
+    if "client_key" not in label_df.columns and "session_id" not in label_df.columns:
         raise ValueError("Manual labels CSV must contain either 'client_key' or 'session_id'")
-    return {str(row[key_column]): str(row["label"]).strip().lower() for row in label_df.to_dict(orient="records")}
+    working = label_df.copy()
+    working["label"] = working["label"].astype(str).str.strip().str.lower()
+    for column in ("client_key", "session_id", *OPTIONAL_MANUAL_METADATA_COLUMNS):
+        if column not in working.columns:
+            working[column] = pd.NA
+    return working[["client_key", "session_id", "label", *OPTIONAL_MANUAL_METADATA_COLUMNS]].copy()
 
 
 def _matches_any(value: object, patterns: list[str]) -> bool:
@@ -91,3 +111,38 @@ def _decide_label(row: pd.Series) -> str:
     if float(row.get("weak_bot_score", 0.0)) <= 0.15 and int(row.get("num_events", 0)) >= 3:
         return DEFAULT_NEGATIVE_LABEL
     return DEFAULT_UNKNOWN_LABEL
+
+
+def _merge_manual_metadata(summary: pd.DataFrame, manual_df: pd.DataFrame) -> pd.DataFrame:
+    working = summary.copy()
+    working["manual_label"] = pd.NA
+    for column in OPTIONAL_MANUAL_METADATA_COLUMNS:
+        working[column] = working.get(column, pd.Series(index=working.index, dtype="object"))
+        working[column] = working[column].replace("", pd.NA)
+
+    if manual_df.empty:
+        return working
+
+    client_manual = manual_df[manual_df["client_key"].notna()].copy()
+    if not client_manual.empty:
+        client_columns = ["client_key", "label", *OPTIONAL_MANUAL_METADATA_COLUMNS]
+        client_manual = client_manual[client_columns].rename(columns={"label": "manual_label"})
+        working = working.merge(client_manual, on="client_key", how="left", suffixes=("", "_manual_client"))
+        working["manual_label"] = working["manual_label"].fillna(working.pop("manual_label_manual_client"))
+        for column in OPTIONAL_MANUAL_METADATA_COLUMNS:
+            manual_column = f"{column}_manual_client"
+            if manual_column in working.columns:
+                working[column] = working[column].fillna(working.pop(manual_column))
+
+    session_manual = manual_df[manual_df["session_id"].notna()].copy()
+    if not session_manual.empty:
+        session_columns = ["session_id", "label", *OPTIONAL_MANUAL_METADATA_COLUMNS]
+        session_manual = session_manual[session_columns].rename(columns={"label": "manual_label"})
+        working = working.merge(session_manual, on="session_id", how="left", suffixes=("", "_manual_session"))
+        working["manual_label"] = working["manual_label"].fillna(working.pop("manual_label_manual_session"))
+        for column in OPTIONAL_MANUAL_METADATA_COLUMNS:
+            manual_column = f"{column}_manual_session"
+            if manual_column in working.columns:
+                working[column] = working[column].fillna(working.pop(manual_column))
+
+    return working

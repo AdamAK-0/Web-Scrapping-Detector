@@ -1,52 +1,49 @@
-# Local Nginx + Website Lab Setup (Windows)
+# Local Nginx Website Lab Setup (Windows)
 
-This repository includes a complete local lab for the research objective described in the proposal: early detection of scraping behavior from website traversal logs and navigation entropy.
-
-## What this setup does
-
-- hosts `website_lab/` through **Nginx for Windows**
-- writes access logs through Nginx's native `tools/nginx-*/logs/` directory and exposes the same files at `data/live_logs/` via a Windows junction when available
-- generates labeled human-like and bot traffic against the site
-- prepares a trainable dataset from the collected log
-- runs the existing training and experiment pipeline on the resulting data
+This lab supports the thesis workflow: collect website traffic, label sessions, build graph/entropy features, and evaluate early bot detection.
 
 ## One-time setup
 
-From **PowerShell** in the project root:
+From PowerShell in the repo root:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\lab\scripts\setup_nginx_windows.ps1
 ```
 
-## Start the local website
+## Clean start
 
-```bat
-lab\scripts\start_nginx_windows.bat
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\stop_nginx_windows.ps1
+lab\scripts\reset_live_logs.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\start_nginx_windows.ps1
 ```
 
-Open `http://127.0.0.1:8039` in your browser.
-If Nginx is already running, the start script reloads it and returns immediately instead of blocking the terminal.
-If the site loads but `data/live_logs/access.log` stays empty, you likely still have an older admin-started `nginx.exe` process bound to port `8039`; clear those stale listeners from an elevated shell and start again.
+Open:
+
+```text
+http://127.0.0.1:8039/
+```
+
+If the site loads but `data\live_logs\access.log` stays empty, clear stale old `nginx.exe` processes that are still bound to port `8039`, then run the clean start block again.
 
 ## Stop Nginx
 
-```bat
-lab\scripts\stop_nginx_windows.bat
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\stop_nginx_windows.ps1
 ```
 
-## Reset logs before a new experiment
+## Traffic generation
 
-```bat
-lab\scripts\reset_live_logs.bat
-```
-
-Run the reset before `lab\scripts\start_nginx_windows.bat` when you want a clean capture window.
-
-## Generate local labeled traffic
+Human-like traffic:
 
 ```bat
 lab\scripts\generate_human_traffic.bat
+```
+
+Classic scripted bot families:
+
+```bat
 lab\scripts\generate_bot_bfs_traffic.bat
 lab\scripts\generate_bot_dfs_traffic.bat
 lab\scripts\generate_bot_linear_traffic.bat
@@ -56,21 +53,80 @@ lab\scripts\generate_bot_articles_traffic.bat
 lab\scripts\generate_bot_revisit_traffic.bat
 ```
 
-These scripts update `data/live_labels/manual_labels.csv`.
+Harder browser-style bot families:
 
-## Prepare a dataset from the collected logs
+```bat
+lab\scripts\generate_bot_browser_hybrid_traffic.bat
+lab\scripts\generate_bot_browser_noise_traffic.bat
+lab\scripts\generate_bot_playwright_traffic.bat
+lab\scripts\generate_bot_selenium_traffic.bat
+```
+
+Notes:
+
+- `playwright` mode requires `playwright install`
+- Selenium mode uses Python Selenium WebDriver
+- Generated labels are written to `data\live_labels\manual_labels.csv`
+
+## Manual human collection
+
+The label CSV now supports optional metadata columns:
+
+- `participant_id`
+- `traffic_family`
+- `collection_method`
+- `automation_stack`
+- `notes`
+
+Recommended human collection tasks:
+
+- explore the homepage and navigation pages
+- compare 2-3 products
+- read an article, then return to products
+- use search, cart, FAQ, and contact pages
+- backtrack and revisit naturally
+
+Recommended metadata example:
+
+```csv
+client_key,label,participant_id,traffic_family,collection_method,notes
+ip_ua:127.0.0.1|Mozilla/5.0...,human,p07,human_navigation,manual_browser,article-to-product task
+```
+
+## Prepare the live dataset
 
 ```bat
 lab\scripts\prepare_live_dataset.bat
 ```
 
-## Train and run research experiments
+This produces `data\prepared_live\` with:
+
+- `requests.csv`
+- `session_summary.csv`
+- `graph_edges.csv`
+- `graph_categories.csv`
+
+## Run the thesis experiment pipeline
 
 ```bat
 lab\scripts\run_research_pipeline.bat
 ```
 
+That now runs:
 
-## Logging note
+- training on `data\prepared_live`
+- grouped session-split experiments
+- hard-prefix reporting
+- leave-one-bot-family-out
+- time-based split
+- leave-one-human-user-out when `participant_id` is present
+- shortcut/leakage audits
+- entropy-variant comparison
 
-The Windows setup now keeps Nginx's source-of-truth logs in `tools/nginx-*/logs/` because that is the most reliable location for Nginx on Windows. The setup script then maps `data/live_logs/` to the same directory, so the rest of the project can still use `data/live_logs/access.log`.
+## Useful output paths
+
+- `data\prepared_live\experiments\summary.md`
+- `data\prepared_live\experiments\leaderboard.csv`
+- `data\prepared_live\experiments\leakage_audit.csv`
+- `data\prepared_live\experiments\shortcut_audit.csv`
+- `data\prepared_live\experiments\entropy_variant_comparison.csv`

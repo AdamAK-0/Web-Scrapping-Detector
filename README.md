@@ -1,103 +1,84 @@
 # Real-Time Web Scraping Detection Research Prototype
 
-This repository is a research-oriented implementation for **real-time web scraping detection** using:
+This repository implements a thesis-oriented pipeline for early web-scraping detection using:
 
 - website traversal graphs
-- incremental session-level features
-- a proposed **Navigation Entropy Score**
-- early bot detection from **partial sessions**
-- real log ingestion and online scoring
+- Navigation Entropy features
+- prefix-based online classification
+- detection-speed metrics such as mean first detected prefix
+- real Nginx log ingestion and a local Windows lab
 
-The codebase is designed to support a **research workflow** rather than only a toy demo. It now includes:
-
-- a reproducible synthetic data generator for humans and multiple scraper strategies
-- export of **Nginx combined logs** for realistic pipeline validation
-- raw log ingestion for **CSV, JSONL, and Nginx combined** formats
-- request-log sessionization with inactivity-based splitting
-- weak-label and manual-label support for building experimental datasets
-- graph construction from session transitions
-- incremental feature extraction over prefixes of sessions
-- baseline model training and evaluation
-- early-detection metrics such as **requests-to-detection**
-- a **FastAPI** service for live online scoring
-
-## Research positioning
-
-Graph-based bot detection already has prior art, so this prototype is positioned around **early detection from partial sessions**, not merely graph usage by itself. The strongest research angle is:
-
-1. represent a website as a traversal graph,
-2. compute graph/entropy features as a session unfolds,
-3. classify the session in real time,
-4. evaluate both **accuracy** and **detection speed**.
+The project is positioned around early detection from partial sessions, not just full-session classification.
 
 ## Quick start
 
-```bash
+```powershell
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 pip install -e .
 ```
 
-## 1) Synthetic research pipeline
+Browser automation traffic support:
 
-Generate synthetic human + bot sessions:
+- `playwright` mode requires `playwright install`
+- Selenium uses the Python Selenium stack and local browser automation
 
-```bash
-python -m wsd.train --generate-synthetic --output-dir data/synthetic_run
+## Core workflow
+
+### 1. Prepare a dataset from logs
+
+```powershell
+python -m wsd.prepare_dataset `
+  --input-path path\to\access.log `
+  --format nginx_combined `
+  --manual-labels path\to\manual_labels.csv `
+  --output-dir data\prepared_run
 ```
 
-Train and evaluate on the generated dataset:
+Outputs:
 
-```bash
-python -m wsd.train --data-dir data/synthetic_run --prefixes 3 5 10 15 20
-```
-
-This produces:
-
+- `normalized_requests.csv`
 - `requests.csv`
+- `session_summary.csv`
 - `graph_edges.csv`
 - `graph_categories.csv`
-- `prefix_features.csv`
-- per-model metrics CSVs
-- detection-delay summaries
-- saved `.pkl` model bundles
 
-## 2) Real-log dataset preparation
+### 2. Train baseline models
 
-Prepare a trainable dataset from raw logs:
-
-```bash
-python -m wsd.prepare_dataset \
-  --input-path path/to/access.log \
-  --format nginx_combined \
-  --manual-labels path/to/manual_labels.csv \
-  --output-dir data/prepared_run
+```powershell
+python -m wsd.train --data-dir data\prepared_run --prefixes 3 5 10 15 20
 ```
 
-Supported formats:
+### 3. Run the thesis experiment suite
 
-- `csv`
-- `jsonl`
-- `nginx_combined`
-- `auto`
+```powershell
+python -m wsd.experiment `
+  --data-dir data\prepared_run `
+  --prefixes 3 5 10 15 20 `
+  --hard-prefixes 3 5 10 `
+  --protocols session_split hard_prefix_session_split leave_one_bot_family_out time_split leave_one_human_user_out `
+  --group-key path_signature `
+  --n-bootstrap 300 `
+  --save-models
+```
 
-The preparation pipeline exports:
+Key outputs:
 
-- `normalized_requests.csv` — normalized raw log records
-- `requests.csv` — sessionized page-level records for modeling
-- `session_summary.csv` — session statistics and proposed labels
-- `graph_edges.csv`
-- `graph_categories.csv`
+- `leaderboard.csv`
+- `summary.md`
+- `split_summary.csv`
+- `leakage_audit.csv`
+- `shortcut_audit.csv`
+- `entropy_variant_comparison.csv`
+- `predictions_*.csv`
+- `metrics_*.csv`
+- `detection_delay_*.csv`
+- plots for F1/recall by prefix, entropy distributions, score histograms, detection speed, and example score trajectories
 
-### Manual labels
+## Manual labels format
 
-The optional manual-label CSV can contain either:
-
-- `client_key,label`
-- `session_id,label`
-
-Examples:
+The label file stays backward compatible with the original format:
 
 ```csv
 client_key,label
@@ -105,121 +86,57 @@ ip_ua:203.0.113.10|Mozilla/5.0,human
 ip_ua:203.0.113.99|python-requests/2.31,bot
 ```
 
-## 3) Train on the prepared dataset
+It now also supports optional research metadata:
 
-```bash
-python -m wsd.train --data-dir data/prepared_run --prefixes 3 5 10 15 20
+```csv
+client_key,label,participant_id,traffic_family,collection_method,automation_stack,notes
+ip_ua:203.0.113.10|Mozilla/5.0,human,p01,human_navigation,manual_browser,,product-comparison task
+ip_ua:203.0.113.99|PlaywrightBrowser/1.0,bot,playwright_01,playwright_browser,browser_automation,playwright,randomized waits
 ```
 
-Saved model bundles appear under:
+Useful optional columns:
 
-```text
-<data-dir>/models/*.pkl
-```
+- `participant_id`
+- `traffic_family`
+- `collection_method`
+- `automation_stack`
+- `notes`
 
-## 4) Online scoring API
+These values flow into session summaries and experiment metadata, enabling leave-one-human-user-out evaluation and cleaner provenance analysis.
 
-Serve a trained model:
+## Supported traffic families
 
-```bash
-python -m wsd.serve \
-  --bundle data/prepared_run/models/logistic_regression_bundle.pkl \
-  --graph-dir data/prepared_run
-```
+Request-based and browser-like families:
 
-Example request:
+- `human`
+- `bfs`
+- `dfs`
+- `linear`
+- `stealth`
+- `products`
+- `articles`
+- `revisit`
+- `browser_hybrid`
+- `browser_noise`
+- `playwright`
+- `selenium`
 
-```bash
-curl -X POST http://127.0.0.1:8039/score \
-  -H "Content-Type: application/json" \
-  -d '{
-    "session_id": "live_session_1",
-    "path": "/blog/post-1",
-    "timestamp": 1712910000.0,
-    "user_agent": "python-requests/2.31"
-  }'
-```
+## Supported experiment models
 
-## Project structure
+- `logistic_regression`
+- `random_forest`
+- `extra_trees`
+- `hist_gradient_boosting`
+- `calibrated_svm`
+- `xgboost` when installed
+- `lightgbm` when installed
+- `catboost` when installed
 
-```text
-src/wsd/
-  config.py              # shared constants and defaults
-  types.py               # typed data structures
-  graph_builder.py       # graph loading/building helpers
-  sessionizer.py         # raw request -> session conversion
-  log_parsers.py         # CSV / JSONL / Nginx log normalization
-  labeling.py            # weak labels and manual labels
-  entropy.py             # entropy utilities
-  features.py            # incremental graph + timing feature extraction
-  synthetic_data.py      # synthetic site, traffic, and Nginx demo generator
-  modeling.py            # training, evaluation, bundle persistence
-  prepare_dataset.py     # raw log -> research dataset CLI
-  online.py              # stateful online detector
-  serve.py               # FastAPI live scoring service
-  train.py               # training CLI
+Use `--model-set` to run only a subset.
 
-tests/
-  test_entropy.py
-  test_features.py
-  test_log_pipeline.py
-  test_online.py
-```
+## Windows local lab
 
-## Included demo assets
-
-The repository now includes a realistic demo pipeline under:
-
-- `data/nginx_demo_raw/`
-- `data/nginx_demo_prepared/`
-
-These are generated from synthetic sessions but exported in **Nginx combined-log style** and then re-ingested through the real dataset preparation pipeline. That makes it easy to validate the full workflow before plugging in real logs.
-
-## Current scope
-
-This version supports a strong **research starter pipeline**:
-
-- ingest logs
-- build sessions
-- assign manual/weak labels
-- construct a navigation graph
-- extract online features
-- train baseline models
-- measure early detection
-- score sessions in a live API
-
-## Strong next extensions
-
-- honeypot-trigger features
-- JA4 / JA4H or header-based comparison baseline
-- sequence model or GNN over traversal prefixes
-- drift-aware thresholding for deployment
-- evaluation on a real production website dataset
-- ablation studies for entropy vs graph vs timing features
-
-
-## 5) Research experiments and ablations
-
-Run calibrated ablation experiments with confidence intervals and report artifacts:
-
-```bash
-PYTHONPATH=src python -m wsd.experiment   --data-dir data/nginx_demo_prepared   --prefixes 3 5 10 15 20   --n-bootstrap 300   --save-models
-```
-
-This exports:
-
-- ablation-specific metrics CSVs
-- prediction tables
-- bootstrap confidence intervals
-- detection-delay summaries
-- a leaderboard
-- a markdown summary
-- plots for F1-by-prefix and the final leaderboard
-
-
-## 6) Local Nginx website lab (Windows)
-
-A complete Windows-ready local lab is included for the project website in `website_lab/`.
+The lab serves `website_lab/` through Nginx on `http://127.0.0.1:8039/`.
 
 One-time setup:
 
@@ -228,14 +145,15 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\lab\scripts\setup_nginx_windows.ps1
 ```
 
-Start the site through Nginx:
+Clean start:
 
-```bat
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\stop_nginx_windows.ps1
 lab\scripts\reset_live_logs.bat
-lab\scripts\start_nginx_windows.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\start_nginx_windows.ps1
 ```
 
-Generate local labeled traffic:
+Generate traffic:
 
 ```bat
 lab\scripts\generate_human_traffic.bat
@@ -246,13 +164,55 @@ lab\scripts\generate_bot_stealth_traffic.bat
 lab\scripts\generate_bot_products_traffic.bat
 lab\scripts\generate_bot_articles_traffic.bat
 lab\scripts\generate_bot_revisit_traffic.bat
+lab\scripts\generate_bot_browser_hybrid_traffic.bat
+lab\scripts\generate_bot_browser_noise_traffic.bat
+lab\scripts\generate_bot_playwright_traffic.bat
+lab\scripts\generate_bot_selenium_traffic.bat
 ```
 
-Prepare and run the research pipeline on the collected logs:
+Prepare and run research:
 
 ```bat
 lab\scripts\prepare_live_dataset.bat
 lab\scripts\run_research_pipeline.bat
 ```
 
-Detailed instructions are in `LAB_SETUP.md`.
+Detailed lab instructions are in `LAB_SETUP.md`.
+
+## Project structure
+
+```text
+src/wsd/
+  config.py
+  entropy.py
+  experiment.py
+  features.py
+  labeling.py
+  lab_traffic.py
+  log_parsers.py
+  modeling.py
+  online.py
+  prepare_dataset.py
+  serve.py
+  sessionizer.py
+  synthetic_data.py
+  train.py
+```
+
+## Thesis-focused status
+
+The codebase now supports:
+
+- multiple entropy variants and Navigation Entropy Score v2
+- grouped session splits by exact path signature
+- leave-one-bot-family-out, time-based, and leave-one-human-user-out evaluation
+- threshold tuning by prefix
+- richer shortcut and leakage audits
+- broader tabular model benchmarks
+- browser-style bot generation via Playwright, Selenium, and safe emulated browser families
+
+What still depends on real data collection:
+
+- 40-60 more real human browsing sessions
+- stronger live evidence against harder browser-like bots
+- final thesis-quality results on the expanded live dataset

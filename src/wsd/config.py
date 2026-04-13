@@ -39,6 +39,8 @@ DEFAULT_BOT_USER_AGENT_PATTERNS = [
     r"researchscraper",
     r"researchstealth",
     r"stealth-browser",
+    r"hybridcrawler",
+    r"browsernoise",
     r"scrapy",
     r"selenium",
     r"webdriver",
