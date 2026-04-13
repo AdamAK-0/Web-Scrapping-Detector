@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
+import importlib
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.ensemble import ExtraTreesClassifier, HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 
 from .config import DEFAULT_NEGATIVE_LABEL, DEFAULT_POSITIVE_LABEL, DEFAULT_UNKNOWN_LABEL
@@ -44,21 +47,64 @@ class ModelBundle:
     threshold: float = 0.5
 
 
-def build_models(random_state: int = 42) -> dict[str, Pipeline | RandomForestClassifier]:
-    return {
-        "logistic_regression": Pipeline(
+def build_models(
+    random_state: int = 42,
+    *,
+    selected_models: Iterable[str] | None = None,
+) -> dict[str, Pipeline | RandomForestClassifier]:
+    """Build the benchmark model registry.
+
+    Optional third-party models are included only when their packages are
+    importable in the active environment.
+    """
+    factories: dict[str, Callable[[], Pipeline | RandomForestClassifier]] = {
+        "logistic_regression": lambda: Pipeline(
             steps=[
                 ("scaler", StandardScaler()),
-                ("clf", LogisticRegression(max_iter=1000, random_state=random_state)),
+                ("clf", LogisticRegression(max_iter=1000, random_state=random_state, class_weight="balanced")),
             ]
         ),
-        "random_forest": RandomForestClassifier(
+        "random_forest": lambda: RandomForestClassifier(
             n_estimators=300,
             min_samples_leaf=2,
             random_state=random_state,
             class_weight="balanced",
         ),
+        "extra_trees": lambda: ExtraTreesClassifier(
+            n_estimators=400,
+            min_samples_leaf=2,
+            random_state=random_state,
+            class_weight="balanced",
+        ),
+        "hist_gradient_boosting": lambda: HistGradientBoostingClassifier(
+            max_depth=6,
+            learning_rate=0.06,
+            max_iter=300,
+            random_state=random_state,
+        ),
+        "calibrated_svm": lambda: Pipeline(
+            steps=[
+                ("scaler", StandardScaler()),
+                (
+                    "clf",
+                    CalibratedClassifierCV(
+                        estimator=LinearSVC(class_weight="balanced", dual="auto", random_state=random_state),
+                        cv=3,
+                    ),
+                ),
+            ]
+        ),
     }
+
+    optional_factories = _optional_model_factories(random_state=random_state)
+    factories.update(optional_factories)
+
+    requested = [name.strip() for name in selected_models] if selected_models else list(factories)
+    missing = [name for name in requested if name not in factories]
+    if missing:
+        available = ", ".join(sorted(factories))
+        raise ValueError(f"Unknown or unavailable models requested: {missing}. Available models: {available}")
+    return {name: factories[name]() for name in requested}
 
 
 def train_and_evaluate_by_prefix(
@@ -192,3 +238,50 @@ def summarize_detection_delay(predictions: pd.DataFrame, positive_label: str = D
             }
         )
     return pd.DataFrame(grouped_rows)
+
+
+def _optional_model_factories(random_state: int) -> dict[str, Callable[[], object]]:
+    factories: dict[str, Callable[[], object]] = {}
+
+    if importlib.util.find_spec("xgboost") is not None:
+        from xgboost import XGBClassifier
+
+        factories["xgboost"] = lambda: XGBClassifier(
+            objective="binary:logistic",
+            eval_metric="logloss",
+            n_estimators=300,
+            max_depth=6,
+            learning_rate=0.05,
+            subsample=0.9,
+            colsample_bytree=0.9,
+            random_state=random_state,
+        )
+
+    if importlib.util.find_spec("lightgbm") is not None:
+        from lightgbm import LGBMClassifier
+
+        factories["lightgbm"] = lambda: LGBMClassifier(
+            n_estimators=300,
+            learning_rate=0.05,
+            num_leaves=31,
+            subsample=0.9,
+            colsample_bytree=0.9,
+            random_state=random_state,
+            class_weight="balanced",
+            verbosity=-1,
+        )
+
+    if importlib.util.find_spec("catboost") is not None:
+        from catboost import CatBoostClassifier
+
+        factories["catboost"] = lambda: CatBoostClassifier(
+            loss_function="Logloss",
+            auto_class_weights="Balanced",
+            depth=6,
+            learning_rate=0.05,
+            iterations=300,
+            random_seed=random_state,
+            verbose=False,
+        )
+
+    return factories

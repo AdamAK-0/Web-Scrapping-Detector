@@ -8,7 +8,7 @@ from pathlib import Path
 from .graph_builder import build_graph_from_sessions, save_graph_to_csv
 from .labeling import apply_session_labels
 from .log_parsers import read_raw_logs
-from .sessionizer import build_sessions_from_dataframe, sessions_to_dataframe
+from .sessionizer import build_sessions_from_dataframe, sessions_to_dataframe, summarize_sessions
 
 
 def parse_args() -> argparse.Namespace:
@@ -31,6 +31,12 @@ def main() -> None:
     raw_df = read_raw_logs(args.input_path, log_format=args.format)
     raw_df.to_csv(output_dir / "normalized_requests.csv", index=False)
 
+    all_request_sessions = build_sessions_from_dataframe(
+        raw_df,
+        session_timeout_seconds=args.session_timeout,
+        drop_asset_requests=False,
+        min_session_length=1,
+    )
     sessions = build_sessions_from_dataframe(
         raw_df,
         session_timeout_seconds=args.session_timeout,
@@ -38,6 +44,22 @@ def main() -> None:
         min_session_length=args.min_session_length,
     )
     summary_df = apply_session_labels(sessions, manual_labels_path=args.manual_labels)
+    if all_request_sessions:
+        all_request_summary = summarize_sessions(all_request_sessions)
+        enrich_columns = [
+            "session_id",
+            "start_timestamp",
+            "end_timestamp",
+            "first_path",
+            "referrer_present_ratio",
+            "num_page_requests",
+            "num_asset_requests",
+            "asset_request_ratio",
+            "has_asset_requests",
+        ]
+        extra_summary = all_request_summary[[column for column in enrich_columns if column in all_request_summary.columns]].copy()
+        if not extra_summary.empty:
+            summary_df = summary_df.merge(extra_summary, on="session_id", how="left", suffixes=("", "_all_requests"))
     session_df = sessions_to_dataframe(sessions)
     session_df.to_csv(output_dir / "requests.csv", index=False)
     summary_df.to_csv(output_dir / "session_summary.csv", index=False)

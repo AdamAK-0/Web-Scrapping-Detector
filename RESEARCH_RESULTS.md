@@ -8,12 +8,14 @@ This document summarizes the current state of the implementation against the pro
 The codebase now includes:
 
 - website-graph and prefix-based feature extraction
-- Navigation Entropy and related graph/timing/session features
+- multiple entropy variants plus Navigation Entropy Score v2
+- graph/timing/session features with entropy slopes and concentration signals
 - early-detection experiments on partial sessions
 - heuristic, static-feature, and full-session baselines
-- split leakage auditing
+- split leakage and shortcut auditing
 - leave-one-bot-family-out evaluation
-- richer controlled bot-generation modes for the local lab
+- time-based and leave-one-human-user-out evaluation
+- richer controlled bot-generation modes for the local lab, including browser-style families
 
 ## Main artifact locations
 
@@ -100,7 +102,7 @@ The implementation now matches the proposal much more closely and supports a def
 Collect a larger live dataset with:
 
 - 40 to 100 human sessions from multiple people and browsers
-- the new stealth/products/articles/revisit bot families
+- the new browser-style bot families, especially `browser_hybrid`, `browser_noise`, `playwright`, and `selenium`
 - more varied session goals and backtracking behavior
 
 Then rerun:
