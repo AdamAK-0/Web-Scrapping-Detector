@@ -60,6 +60,28 @@ def tune_threshold(y_true: np.ndarray, y_score: np.ndarray, candidate_thresholds
     return best_threshold
 
 
+def tune_thresholds_by_prefix(
+    prefix_predictions: pd.DataFrame,
+    *,
+    positive_label: str = "bot",
+    default_threshold: float = 0.5,
+    candidate_thresholds: Iterable[float] | None = None,
+) -> dict[int, float]:
+    thresholds: dict[int, float] = {}
+    working = prefix_predictions.copy()
+    if working.empty:
+        return thresholds
+    working["y_true"] = (working["label"] == positive_label).astype(int)
+    for prefix_len, group in working.groupby("prefix_len"):
+        y_true = group["y_true"].to_numpy()
+        y_score = group["bot_probability"].to_numpy()
+        if len(group) < 4 or len(np.unique(y_true)) < 2:
+            thresholds[int(prefix_len)] = float(default_threshold)
+            continue
+        thresholds[int(prefix_len)] = tune_threshold(y_true, y_score, candidate_thresholds=candidate_thresholds)
+    return thresholds
+
+
 def bootstrap_metric_ci(
     y_true: Sequence[int],
     y_score: Sequence[float],
@@ -113,7 +135,7 @@ def bootstrap_metric_ci(
 def attach_metric_confidence_intervals(
     prefix_predictions: pd.DataFrame,
     *,
-    threshold: float,
+    threshold: float | dict[int, float],
     metric_names: Iterable[str] = ("f1", "roc_auc", "pr_auc"),
     n_bootstrap: int = 500,
     positive_label: str = "bot",
@@ -124,8 +146,9 @@ def attach_metric_confidence_intervals(
     for prefix_len, group in working.groupby("prefix_len"):
         y_true = group["y_true"].to_numpy()
         y_score = group["bot_probability"].to_numpy()
+        group_threshold = _resolve_threshold(threshold, prefix_len, group)
         for metric_name in metric_names:
-            ci = bootstrap_metric_ci(y_true, y_score, threshold, metric_name, n_bootstrap=n_bootstrap)
+            ci = bootstrap_metric_ci(y_true, y_score, group_threshold, metric_name, n_bootstrap=n_bootstrap)
             rows.append(
                 {
                     "prefix_len": int(prefix_len),
@@ -134,9 +157,18 @@ def attach_metric_confidence_intervals(
                     "ci_low": ci.ci_low,
                     "ci_high": ci.ci_high,
                     "n_bootstrap": ci.n_bootstrap,
+                    "threshold_used": group_threshold,
                 }
             )
     return pd.DataFrame(rows)
+
+
+def _resolve_threshold(threshold: float | dict[int, float], prefix_len: object, group: pd.DataFrame) -> float:
+    if isinstance(threshold, dict):
+        return float(threshold.get(int(prefix_len), 0.5))
+    if "threshold_used" in group.columns and not group["threshold_used"].empty:
+        return float(group["threshold_used"].iloc[0])
+    return float(threshold)
 
 
 

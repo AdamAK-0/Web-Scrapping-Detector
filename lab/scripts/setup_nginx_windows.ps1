@@ -17,17 +17,121 @@ New-Item -ItemType Directory -Force -Path $ToolsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $LiveLabels | Out-Null
 New-Item -ItemType Directory -Force -Path $GeneratedDir | Out-Null
 
-if (-not (Test-Path $NginxHome)) {
-    if (-not (Test-Path $ZipPath)) {
-        $DownloadUrl = "https://nginx.org/download/nginx-" + $NginxVersion + ".zip"
-        Write-Host "Downloading Nginx from $DownloadUrl"
-        Invoke-WebRequest -Uri $DownloadUrl -OutFile $ZipPath
+function Test-NginxInstallComplete {
+    param(
+        [string]$NginxRoot
+    )
+
+    $requiredPaths = @(
+        (Join-Path $NginxRoot "nginx.exe"),
+        (Join-Path $NginxRoot "conf"),
+        (Join-Path $NginxRoot "conf\mime.types")
+    )
+
+    foreach ($requiredPath in $requiredPaths) {
+        if (-not (Test-Path $requiredPath)) {
+            return $false
+        }
     }
+
+    return $true
+}
+
+function Stop-RepoNginxProcesses {
+    param(
+        [string]$NginxRoot
+    )
+
+    $nginxExePath = (Join-Path $NginxRoot "nginx.exe")
+    $repoPids = @(
+        Get-Process nginx -ErrorAction SilentlyContinue |
+        Where-Object { $_.Path -eq $nginxExePath } |
+        Select-Object -ExpandProperty Id
+    )
+
+    foreach ($procId in ($repoPids | Sort-Object -Unique)) {
+        try {
+            Stop-Process -Id $procId -Force -ErrorAction Stop
+        } catch {
+            Write-Warning "Could not stop repo nginx PID ${procId}: $($_.Exception.Message)"
+        }
+    }
+}
+
+function Ensure-NginxZip {
+    param(
+        [string]$ArchivePath,
+        [string]$Version
+    )
+
+    if (-not (Test-Path $ArchivePath)) {
+        $DownloadUrl = "https://nginx.org/download/nginx-" + $Version + ".zip"
+        Write-Host "Downloading Nginx from $DownloadUrl"
+        Invoke-WebRequest -Uri $DownloadUrl -OutFile $ArchivePath
+    }
+}
+
+function Repair-NginxInstall {
+    param(
+        [string]$ArchivePath,
+        [string]$DestinationRoot,
+        [string]$Version
+    )
+
+    Ensure-NginxZip -ArchivePath $ArchivePath -Version $Version
+    New-Item -ItemType Directory -Force -Path $DestinationRoot | Out-Null
+
+    $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("nginx-repair-" + [guid]::NewGuid().ToString("N"))
+    try {
+        Expand-Archive -Path $ArchivePath -DestinationPath $tempRoot -Force
+        $expandedHome = Join-Path $tempRoot ("nginx-" + $Version)
+        if (-not (Test-Path $expandedHome)) {
+            throw "Expanded Nginx archive did not contain expected folder: $expandedHome"
+        }
+
+        foreach ($requiredDir in @("conf")) {
+            $sourceDir = Join-Path $expandedHome $requiredDir
+            if (Test-Path $sourceDir) {
+                Copy-Item $sourceDir -Destination $DestinationRoot -Recurse -Force
+            }
+        }
+
+        foreach ($requiredFile in @("nginx.exe")) {
+            $sourceFile = Join-Path $expandedHome $requiredFile
+            $destFile = Join-Path $DestinationRoot $requiredFile
+            if ((-not (Test-Path $destFile)) -and (Test-Path $sourceFile)) {
+                Copy-Item $sourceFile -Destination $DestinationRoot -Force
+            }
+        }
+    } finally {
+        if (Test-Path $tempRoot) {
+            Remove-Item $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+if ((Test-Path $NginxHome) -and -not (Test-NginxInstallComplete -NginxRoot $NginxHome)) {
+    Write-Warning "Existing Nginx folder is incomplete. Repairing local Nginx install at $NginxHome"
+    Stop-RepoNginxProcesses -NginxRoot $NginxHome
+    Repair-NginxInstall -ArchivePath $ZipPath -DestinationRoot $NginxHome -Version $NginxVersion
+}
+
+if (-not (Test-Path $NginxHome)) {
+    Ensure-NginxZip -ArchivePath $ZipPath -Version $NginxVersion
     Expand-Archive -Path $ZipPath -DestinationPath $ToolsDir -Force
+}
+
+if (-not (Test-NginxInstallComplete -NginxRoot $NginxHome)) {
+    throw "Nginx install is still incomplete after extraction: $NginxHome"
 }
 
 $NginxLogs = Join-Path $NginxHome "logs"
 New-Item -ItemType Directory -Force -Path $NginxLogs | Out-Null
+$NginxTemp = Join-Path $NginxHome "temp"
+New-Item -ItemType Directory -Force -Path $NginxTemp | Out-Null
+foreach ($subdir in @("client_body_temp", "fastcgi_temp", "proxy_temp", "scgi_temp", "uwsgi_temp")) {
+    New-Item -ItemType Directory -Force -Path (Join-Path $NginxTemp $subdir) | Out-Null
+}
 $AccessLogPath = (Join-Path $NginxLogs "access.log").Replace('\', '/')
 $ErrorLogPath = (Join-Path $NginxLogs "error.log").Replace('\', '/')
 

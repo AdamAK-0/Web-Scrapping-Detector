@@ -16,6 +16,25 @@ from .config import DEFAULT_NEGATIVE_LABEL, DEFAULT_POSITIVE_LABEL, DEFAULT_RAND
 from .graph_builder import annotate_graph_metadata, infer_category_from_path
 from .types import RequestEvent, Session
 
+BOT_FAMILY_USER_AGENTS = {
+    "bfs": "ResearchScraper-BFS/1.0 (+https://localhost/research)",
+    "dfs": "ResearchScraper-DFS/1.0 (+https://localhost/research)",
+    "linear": "ResearchScraper-Linear/1.0 (+https://localhost/research)",
+    "product_focus": "ResearchScraper-ProductFocus/1.0 (+https://localhost/research)",
+    "article_focus": "ResearchScraper-ArticleFocus/1.0 (+https://localhost/research)",
+    "stealth_revisit": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 ResearchStealth/1.0"
+    ),
+}
+
+HUMAN_USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/135.0.0.0 Safari/537.36",
+]
+
 
 @dataclass(slots=True)
 class SyntheticDataset:
@@ -61,8 +80,8 @@ def generate_demo_graph() -> nx.DiGraph:
 
 
 def generate_synthetic_dataset(
-    num_humans: int = 160,
-    num_bots_per_strategy: int = 80,
+    num_humans: int = 120,
+    num_bots_per_strategy: int = 20,
     random_seed: int = DEFAULT_RANDOM_SEED,
 ) -> SyntheticDataset:
     rng = random.Random(random_seed)
@@ -73,6 +92,8 @@ def generate_synthetic_dataset(
         generate_bfs_bot_session,
         generate_dfs_bot_session,
         generate_linear_content_scraper_session,
+        generate_product_focus_scraper_session,
+        generate_article_focus_scraper_session,
         generate_randomized_stealth_bot_session,
     ]
 
@@ -146,11 +167,12 @@ def export_synthetic_nginx_logs(dataset: SyntheticDataset, output_dir: str | Pat
 
 
 def generate_human_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
-    length = rng.randint(8, 22)
+    length = rng.randint(10, 24)
     current = ROOT_NODE
     timestamp = 0.0
     events: list[RequestEvent] = []
     breadcrumb: list[str] = [ROOT_NODE]
+    goal = rng.choice(["products", "blog", "support", "about", "mixed"])
 
     for step in range(length):
         if step == 0:
@@ -160,13 +182,15 @@ def generate_human_session(graph: nx.DiGraph, rng: random.Random, session_id: st
             options = neighbors.copy()
             if len(breadcrumb) >= 2:
                 options.append(breadcrumb[-2])
-            if rng.random() < 0.18:
+            if goal != "mixed":
+                options.extend(_goal_weighted_nodes(graph, goal, weight=2))
+            if rng.random() < 0.22:
                 options.extend(rng.sample(list(graph.nodes), k=min(3, graph.number_of_nodes())))
             next_path = rng.choice(options or [ROOT_NODE])
 
         delta_t = max(0.5, rng.gauss(5.0, 2.0))
         timestamp += delta_t
-        events.append(_make_event(graph, session_id, timestamp, delta_t, next_path, DEFAULT_NEGATIVE_LABEL, current))
+        events.append(_make_event(graph, session_id, timestamp, delta_t, next_path, DEFAULT_NEGATIVE_LABEL, current, behavior_family=goal))
 
         if next_path != current:
             breadcrumb.append(next_path)
@@ -177,17 +201,79 @@ def generate_human_session(graph: nx.DiGraph, rng: random.Random, session_id: st
 
 def generate_bfs_bot_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
     order = list(nx.bfs_tree(graph, source=ROOT_NODE).nodes)
-    return _make_scripted_session(graph, rng, session_id, order[: rng.randint(18, 35)], DEFAULT_POSITIVE_LABEL, mean_delay=0.6, std_delay=0.15)
+    return _make_scripted_session(
+        graph,
+        rng,
+        session_id,
+        order[: rng.randint(18, 35)],
+        DEFAULT_POSITIVE_LABEL,
+        mean_delay=0.6,
+        std_delay=0.15,
+        bot_family="bfs",
+    )
 
 
 def generate_dfs_bot_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
     order = list(nx.dfs_preorder_nodes(graph, source=ROOT_NODE))
-    return _make_scripted_session(graph, rng, session_id, order[: rng.randint(18, 35)], DEFAULT_POSITIVE_LABEL, mean_delay=0.7, std_delay=0.18)
+    return _make_scripted_session(
+        graph,
+        rng,
+        session_id,
+        order[: rng.randint(18, 35)],
+        DEFAULT_POSITIVE_LABEL,
+        mean_delay=0.7,
+        std_delay=0.18,
+        bot_family="dfs",
+    )
 
 
 def generate_linear_content_scraper_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
     blog_chain = [ROOT_NODE, "/blog"] + [f"/blog/post-{i}" for i in range(1, 10)]
-    return _make_scripted_session(graph, rng, session_id, blog_chain[: rng.randint(8, len(blog_chain))], DEFAULT_POSITIVE_LABEL, mean_delay=0.45, std_delay=0.1)
+    return _make_scripted_session(
+        graph,
+        rng,
+        session_id,
+        blog_chain[: rng.randint(8, len(blog_chain))],
+        DEFAULT_POSITIVE_LABEL,
+        mean_delay=0.45,
+        std_delay=0.1,
+        bot_family="linear",
+    )
+
+
+def generate_product_focus_scraper_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
+    order = [ROOT_NODE, "/products"]
+    categories = [f"/products/category-{idx}" for idx in range(1, 7)]
+    rng.shuffle(categories)
+    for category in categories[: rng.randint(3, 6)]:
+        order.append(category)
+        products = [f"{category}/item-{item_idx}" for item_idx in range(1, 8)]
+        order.extend(products[: rng.randint(3, 6)])
+    return _make_scripted_session(
+        graph,
+        rng,
+        session_id,
+        order,
+        DEFAULT_POSITIVE_LABEL,
+        mean_delay=0.55,
+        std_delay=0.12,
+        bot_family="product_focus",
+    )
+
+
+def generate_article_focus_scraper_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
+    order = [ROOT_NODE, "/blog"] + [f"/blog/post-{idx}" for idx in range(1, 10)]
+    order.extend(f"/products/category-{(idx % 6) + 1}" for idx in range(1, 5))
+    return _make_scripted_session(
+        graph,
+        rng,
+        session_id,
+        order[: rng.randint(10, len(order))],
+        DEFAULT_POSITIVE_LABEL,
+        mean_delay=0.5,
+        std_delay=0.16,
+        bot_family="article_focus",
+    )
 
 
 def generate_randomized_stealth_bot_session(graph: nx.DiGraph, rng: random.Random, session_id: str) -> Session:
@@ -207,12 +293,25 @@ def generate_randomized_stealth_bot_session(graph: nx.DiGraph, rng: random.Rando
                 neighbors = list(graph.successors(current))
             neighbors = sorted(neighbors, key=lambda path: visited_edges[(current, path)])
             next_path = neighbors[0]
-            if rng.random() < 0.12:
+            if rng.random() < 0.20 and len(events) >= 2:
+                next_path = events[-2].path
+            elif rng.random() < 0.12:
                 next_path = rng.choice(neighbors)
 
         delta_t = max(0.3, rng.gauss(1.3, 0.35))
         timestamp += delta_t
-        events.append(_make_event(graph, session_id, timestamp, delta_t, next_path, DEFAULT_POSITIVE_LABEL, current))
+        events.append(
+            _make_event(
+                graph,
+                session_id,
+                timestamp,
+                delta_t,
+                next_path,
+                DEFAULT_POSITIVE_LABEL,
+                current,
+                bot_family="stealth_revisit",
+            )
+        )
         if step > 0:
             visited_edges[(current, next_path)] += 1
         current = next_path
@@ -228,6 +327,7 @@ def _make_scripted_session(
     label: str,
     mean_delay: float,
     std_delay: float,
+    bot_family: str | None = None,
 ) -> Session:
     timestamp = 0.0
     events: list[RequestEvent] = []
@@ -235,16 +335,29 @@ def _make_scripted_session(
     for path in path_sequence:
         delta_t = max(0.1, rng.gauss(mean_delay, std_delay))
         timestamp += delta_t
-        events.append(_make_event(graph, session_id, timestamp, delta_t, path, label, current))
+        events.append(_make_event(graph, session_id, timestamp, delta_t, path, label, current, bot_family=bot_family))
         current = path
     return Session(session_id=session_id, label=label, events=events)
 
 
-def _make_event(graph: nx.DiGraph, session_id: str, timestamp: float, delta_t: float, path: str, label: str, referrer: str | None) -> RequestEvent:
+def _make_event(
+    graph: nx.DiGraph,
+    session_id: str,
+    timestamp: float,
+    delta_t: float,
+    path: str,
+    label: str,
+    referrer: str | None,
+    *,
+    bot_family: str | None = None,
+    behavior_family: str | None = None,
+) -> RequestEvent:
     category = graph.nodes.get(path, {}).get("category", infer_category_from_path(path))
-    user_agent = "Mozilla/5.0" if label == DEFAULT_NEGATIVE_LABEL else "python-requests/2.x"
-    if label == DEFAULT_POSITIVE_LABEL and math.isclose(delta_t, 1.3, rel_tol=0.2):
-        user_agent = "stealth-browser/1.0"
+    if label == DEFAULT_NEGATIVE_LABEL:
+        user_agent = HUMAN_USER_AGENTS[_stable_index(session_id, len(HUMAN_USER_AGENTS))]
+    else:
+        family_key = bot_family or ("stealth_revisit" if math.isclose(delta_t, 1.3, rel_tol=0.2) else "linear")
+        user_agent = BOT_FAMILY_USER_AGENTS.get(family_key, "python-requests/2.x")
     return RequestEvent(
         session_id=session_id,
         timestamp=timestamp,
@@ -255,4 +368,21 @@ def _make_event(graph: nx.DiGraph, session_id: str, timestamp: float, delta_t: f
         referrer=referrer,
         user_agent=user_agent,
         status_code=200,
+        extra={
+            "bot_family": bot_family or "",
+            "behavior_family": behavior_family or "",
+            "traffic_source": "synthetic_demo",
+        },
     )
+
+
+def _goal_weighted_nodes(graph: nx.DiGraph, goal: str, *, weight: int) -> list[str]:
+    weighted: list[str] = []
+    for node in graph.nodes:
+        if infer_category_from_path(node) == goal:
+            weighted.extend([node] * max(1, weight))
+    return weighted
+
+
+def _stable_index(text: str, modulo: int) -> int:
+    return sum(text.encode("utf-8")) % max(1, modulo)
