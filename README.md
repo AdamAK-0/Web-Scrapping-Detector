@@ -33,6 +33,8 @@ Useful variants:
 .\start_project_windows.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline
 ```
 
+If `data\human_session_archives\` contains imported real-human logs, `-GenerateSampleTraffic` restores those real sessions automatically and then generates only the bot families. Add `-UseGeneratedHumanTraffic` only when you intentionally want the scripted fake-human generator.
+
 Browser automation traffic support:
 
 - `playwright` mode requires `playwright install`
@@ -101,6 +103,17 @@ python -m wsd.export_label_template `
 
 That exports a session-by-session annotation CSV keyed by `session_id`, which is helpful for collecting and curating real human sessions with `participant_id` and notes.
 
+### Import real human sessions from a saved log
+
+After collecting real manual browsing, save the collected Nginx access log as `logs.txt` or pass its path explicitly:
+
+```bat
+lab\scripts\reset_live_logs.bat
+lab\scripts\import_human_sessions.bat logs.txt
+```
+
+The importer archives the raw log under `data\human_session_archives\`, identifies page-level sessions, writes `identified_human_sessions.csv`, and updates `data\live_labels\manual_labels.csv` with `session_id,label=human` rows. The working live log filters common link-preview/crawler agents such as WhatsApp and Google Read Aloud by default while preserving the full raw copy in the archive. After that, run the bot-generation scripts and `prepare_live_dataset.bat` as usual.
+
 ## Manual labels format
 
 The label file stays backward compatible with the original format:
@@ -168,6 +181,30 @@ Request-based and browser-like families:
 - `catboost` when installed
 
 Use `--model-set` to run only a subset.
+
+## Admin detection panel
+
+After training has produced model bundles in `data\prepared_live\models\`, start the standalone admin panel with:
+
+```bat
+lab\scripts\start_admin_panel.bat
+```
+
+This starts the local website on `http://127.0.0.1:8039/` and opens the dashboard server on:
+
+```text
+http://127.0.0.1:8040/
+```
+
+The panel is independent from training. It loads existing `*_bundle.pkl` files, lets you choose the active model and threshold, watches `data\live_logs\access.log`, and scores live sessions as traffic arrives. It also has a controlled test button for launching the existing bot families: `bfs`, `dfs`, `linear`, `stealth`, `products`, `articles`, `revisit`, `browser_hybrid`, `browser_noise`, `playwright`, and `selenium`.
+
+To clear the dashboard back to a clean live-session state, stop Nginx or the panel if needed, then run:
+
+```bat
+lab\scripts\reset_live_logs.bat
+```
+
+You can also use the **Clear Live Sessions** button inside the admin panel. Both options clear the live access/error logs, manual live labels, and admin bot-run logs. They do not delete archived real-human sessions under `data\human_session_archives\`.
 
 ## Windows local lab
 
