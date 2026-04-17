@@ -48,7 +48,6 @@ data/**/normalized_requests.csv
 data/**/plot_*.png
 
 # Generic-model generated datasets, reports, and live graph exports
-generic_models/
 generic_models/artifacts/data/*.csv
 generic_models/artifacts/reports/*.csv
 generic_models/data/external/zenodo/*.csv
