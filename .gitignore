@@ -15,8 +15,12 @@ lab/generated/
 validation_report.txt
 
 # Runtime logs and transient labels
+logs.txt
+run_logs.txt
 data/live_logs/
 data/live_labels/
+data/human_session_archives/
+data/admin_bot_runs/
 data/prepared_live/
 data/prepared_run/
 data/synthetic*/

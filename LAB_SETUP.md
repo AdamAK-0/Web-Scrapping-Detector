@@ -41,6 +41,15 @@ Human-like traffic:
 lab\scripts\generate_human_traffic.bat
 ```
 
+Real collected human traffic from a saved access log:
+
+```bat
+lab\scripts\reset_live_logs.bat
+lab\scripts\import_human_sessions.bat logs.txt
+```
+
+This archives the raw human log in `data\human_session_archives\`, creates `identified_human_sessions.csv` with one row per session, copies a cleaned working log into `data\live_logs\access.log`, and writes session-level human labels into `data\live_labels\manual_labels.csv`. The full raw copy is preserved, but common link-preview/crawler agents such as WhatsApp and Google Read Aloud are filtered out of the working import by default. Use this instead of `generate_human_traffic.bat` for thesis runs with real people.
+
 Classic scripted bot families:
 
 ```bat
@@ -122,6 +131,14 @@ That sheet is keyed by `session_id`, which makes it easier to add real human met
 lab\scripts\run_research_pipeline.bat
 ```
 
+For a clean thesis run that restores archived real-human sessions, generates bot traffic, prepares the dataset, and logs the full output:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File lab\scripts\run_research_pipeline.ps1 -CleanLiveData -GenerateSampleTraffic -RunPipeline -SkipDependencyInstall -LogPath run_logs.txt
+```
+
+When real-human archives exist, this skips the scripted human generator and uses the archived human sessions instead. Add `-UseGeneratedHumanTraffic` only for a synthetic smoke test.
+
 That now runs:
 
 - training on `data\prepared_live`
@@ -141,3 +158,27 @@ That now runs:
 - `data\prepared_live\experiments\shortcut_audit.csv`
 - `data\prepared_live\experiments\shortcut_red_flags.csv`
 - `data\prepared_live\experiments\entropy_variant_comparison.csv`
+
+## Standalone admin panel
+
+After models are trained, run:
+
+```bat
+lab\scripts\start_admin_panel.bat
+```
+
+Open:
+
+```text
+http://127.0.0.1:8040/
+```
+
+The panel is separate from training. It loads existing bundles from `data\prepared_live\models\`, lets you activate a model, watches the live Nginx access log, and includes buttons for running controlled bot-family tests against the local website.
+
+To clear the panel sessions and bot-run history:
+
+```bat
+lab\scripts\reset_live_logs.bat
+```
+
+You can also press **Clear Live Sessions** inside the admin panel. The reset keeps `data\human_session_archives\` safe, but clears live logs, live labels, and `data\admin_bot_runs\`.

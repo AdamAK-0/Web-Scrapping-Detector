@@ -4,6 +4,7 @@ param(
     [switch]$RunPipeline,
     [switch]$InstallPlaywrightBrowsers,
     [switch]$SkipDependencyInstall,
+    [switch]$UseGeneratedHumanTraffic,
     [int]$Port = 8039
 )
 
@@ -48,6 +49,18 @@ function Invoke-ProjectPowerShellScript {
     }
 }
 
+function Get-HumanArchiveLogs {
+    $archiveRoot = Join-Path $ProjectRoot "data\human_session_archives"
+    if (-not (Test-Path $archiveRoot)) {
+        return @()
+    }
+    return @(
+        Get-ChildItem -Path $archiveRoot -Recurse -File -Filter "raw_human_sessions.log" |
+            Sort-Object FullName |
+            ForEach-Object { $_.FullName }
+    )
+}
+
 $venvPath = Join-Path $ProjectRoot ".venv"
 $activatePath = Join-Path $venvPath "Scripts\Activate.ps1"
 $pythonInVenv = Join-Path $venvPath "Scripts\python.exe"
@@ -90,13 +103,38 @@ if ($CleanLiveData) {
     Invoke-ProjectScript -RelativePath "lab\scripts\reset_live_logs.bat"
 }
 
+$restoredHumanArchives = $false
+if ($GenerateSampleTraffic -and -not $UseGeneratedHumanTraffic) {
+    $humanArchiveLogs = Get-HumanArchiveLogs
+    if ($humanArchiveLogs.Count -gt 0) {
+        Write-Step "Restoring archived real human sessions"
+        $importArgs = @(
+            "-m", "wsd.import_human_sessions",
+            "--input-log"
+        ) + $humanArchiveLogs + @(
+            "--format", "auto",
+            "--archive-dir", "data\human_session_archives",
+            "--live-log", "data\live_logs\access.log",
+            "--labels-path", "data\live_labels\manual_labels.csv",
+            "--notes", "restored archived real human browsing logs"
+        )
+        Invoke-Checked -FilePath "python" -ArgumentList $importArgs
+        $restoredHumanArchives = $true
+    }
+}
+
 Write-Step "Starting local Nginx lab on port $Port"
 Invoke-ProjectPowerShellScript -RelativePath "lab\scripts\start_nginx_windows.ps1" -Parameters @{ Port = $Port }
 
 if ($GenerateSampleTraffic) {
-    Write-Step "Generating sample human and bot traffic"
-    $trafficScripts = @(
-        "lab\scripts\generate_human_traffic.bat",
+    if ($restoredHumanArchives) {
+        Write-Step "Generating bot traffic after restored real human sessions"
+        $trafficScripts = @()
+    } else {
+        Write-Step "Generating scripted human and bot traffic"
+        $trafficScripts = @("lab\scripts\generate_human_traffic.bat")
+    }
+    $trafficScripts += @(
         "lab\scripts\generate_bot_bfs_traffic.bat",
         "lab\scripts\generate_bot_dfs_traffic.bat",
         "lab\scripts\generate_bot_linear_traffic.bat",

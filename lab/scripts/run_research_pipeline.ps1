@@ -1,5 +1,12 @@
 param(
-    [string]$LogPath = "run_logs.txt"
+    [string]$LogPath = "run_logs.txt",
+    [switch]$CleanLiveData,
+    [switch]$GenerateSampleTraffic,
+    [switch]$RunPipeline,
+    [switch]$InstallPlaywrightBrowsers,
+    [switch]$SkipDependencyInstall,
+    [switch]$UseGeneratedHumanTraffic,
+    [int]$Port = 8039
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,10 +25,37 @@ if ($logDir -and -not (Test-Path $logDir)) {
     New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 }
 
+function ConvertTo-CmdArgument {
+    param([string]$Value)
+    if ($Value -match '[\s"]') {
+        return '"' + ($Value -replace '"', '\"') + '"'
+    }
+    return $Value
+}
+
 $batPath = Join-Path $ScriptDir "run_research_pipeline.bat"
+$startProjectPath = Join-Path $ProjectRoot "start_project_windows.ps1"
+$workflowMode = $CleanLiveData -or $GenerateSampleTraffic -or $RunPipeline -or $InstallPlaywrightBrowsers -or $SkipDependencyInstall -or $UseGeneratedHumanTraffic
 
 "=== Research pipeline started: $(Get-Date -Format s) ===" | Tee-Object -FilePath $resolvedLogPath
-& cmd.exe /c "`"$batPath`" 2>&1" | Tee-Object -FilePath $resolvedLogPath -Append
+if ($workflowMode) {
+    $startArgs = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", $startProjectPath,
+        "-Port", $Port
+    )
+    if ($CleanLiveData) { $startArgs += "-CleanLiveData" }
+    if ($GenerateSampleTraffic) { $startArgs += "-GenerateSampleTraffic" }
+    if ($RunPipeline) { $startArgs += "-RunPipeline" }
+    if ($InstallPlaywrightBrowsers) { $startArgs += "-InstallPlaywrightBrowsers" }
+    if ($SkipDependencyInstall) { $startArgs += "-SkipDependencyInstall" }
+    if ($UseGeneratedHumanTraffic) { $startArgs += "-UseGeneratedHumanTraffic" }
+    $commandLine = "powershell.exe " + (($startArgs | ForEach-Object { ConvertTo-CmdArgument $_ }) -join " ") + " 2>&1"
+    & cmd.exe /d /c $commandLine | Tee-Object -FilePath $resolvedLogPath -Append
+} else {
+    & cmd.exe /c "`"$batPath`" 2>&1" | Tee-Object -FilePath $resolvedLogPath -Append
+}
 $exitCode = $LASTEXITCODE
 "=== Research pipeline finished: $(Get-Date -Format s) | ExitCode=$exitCode ===" | Tee-Object -FilePath $resolvedLogPath -Append
 
