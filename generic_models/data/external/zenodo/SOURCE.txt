@@ -1,0 +1,12 @@
+Public benchmark source:
+
+Title: Web robot detection - Server logs
+Repository: Zenodo
+Record: https://zenodo.org/records/3477932
+
+Downloaded files used by the generic benchmark:
+
+- simple_features.csv
+- semantic_features.csv
+
+The raw access-log archive in the same Zenodo record is intentionally not downloaded by default because it is several gigabytes.

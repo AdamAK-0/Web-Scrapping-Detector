@@ -84,3 +84,7 @@ git push origin develop
 
 
 powershell -NoProfile -ExecutionPolicy Bypass -File .\start_project_windows.ps1 -CleanLiveData
+
+
+
+generic_models\scripts\start_generic_admin_panel.bat
